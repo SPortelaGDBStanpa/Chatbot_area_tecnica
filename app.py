@@ -1,57 +1,132 @@
 # ================================================================
-# 💬 Chatbot Regulatorio Interno (Versión Streamlit con Agentes)
+# 💬 Chatbot Regulatorio Interno (Excel + OpenAI)
 # ================================================================
 
 import os
 import streamlit as st
+import pandas as pd
+import numpy as np
 import openai
 
-# --- Configuración inicial ---
+# ---------------- CONFIGURACIÓN ----------------
 openai.api_key = os.getenv("OPENAI_API_KEY")
 st.set_page_config(page_title="Chatbot Regulatorio Interno", page_icon="💬")
 
-# ================================================================
-# 1️⃣ AGENTES ESPECIALIZADOS
-# ================================================================
+EMBED_MODEL = "text-embedding-3-small"
+SIM_THRESHOLD = 0.23
+TOP_K = 5
 
-class AgenteHigieneAnimal:
-    """Asistente para productos de higiene/cuidado animal."""
-    def __init__(self):
-        self.frases_vigentes = [
-    
-        ]
+# ---------------- CARGA DEL EXCEL ----------------
+@st.cache_data(show_spinner=True)
+def cargar_datos():
+    try:
+        df = pd.read_excel("conversaciones_revisando.xlsx")
+        df.columns = df.columns.str.strip().str.capitalize()
+        df["Role"] = df["Role"].str.lower()
+        pares = []
+        for i in range(len(df) - 1):
+            if df.iloc[i]["Role"] == "user" and df.iloc[i + 1]["Role"] == "assistant":
+                consulta = str(df.iloc[i]["Content"]).strip()
+                respuesta = str(df.iloc[i + 1]["Content"]).strip()
+                pares.append((consulta, respuesta))
+        return pares
+    except Exception as e:
+        st.error(f"⚠️ Error al cargar el Excel: {e}")
+        return []
 
-# ================================================================
-# 💬 Chatbot Regulatorio Interno (versión ampliada con agente específico animal)
-# ================================================================
+pares = cargar_datos()
+if not pares:
+    st.stop()
 
-import os
-import streamlit as st
-import openai
+consultas = [c for c, _ in pares]
 
-# --- Configuración inicial ---
-openai.api_key = os.getenv("OPENAI_API_KEY")
-st.set_page_config(page_title="Chatbot Regulatorio Interno", page_icon="💬")
+# ---------------- EMBEDDINGS ----------------
+@st.cache_resource(show_spinner=True)
+def generar_embeddings(textos):
+    res = openai.embeddings.create(model=EMBED_MODEL, input=textos)
+    return np.array([d.embedding for d in res.data])
 
-# ================================================================
-# 1️⃣ AGENTES ESPECIALIZADOS
-# ================================================================
+consultas_emb = generar_embeddings(consultas)
 
-class AgenteHigieneAnimal:
-    """Asistente específico para productos cosméticos o de higiene destinados a animales."""
-    def __init__(self):
-        self.frases_vigentes = [
-            """Un producto cosmético según el Reglamento (CE) 1223/2009 es toda sustancia o mezcla destinada a ser puesta en contacto con las partes superficiales del cuerpo humano (epidermis, sistema piloso y capilar, uñas, labios, órganos genitales externos) o con los dientes y mucosas bucales, con el fin exclusivo o principal de limpiarlos, perfumarlos, modificar su aspecto, protegerlos, mantenerlos en buen estado o corregir los olores corporales.
-Por tanto, los productos destinados a la higiene animal no se consideran cosméticos según el Reglamento 1223/2009 y quedan fuera de su ámbito de aplicación.
-Te pongo en contexto la situación de estos productos:
-En un principio los productos cosméticos destinados a animales estaban considerados productos zoosanitarios. Con la publicación del Real Decreto 867/2020 estos productos quedaron fuera de su ámbito de aplicación. Sin embargo, en 2023 se publicó una sentencia del Tribunal Supremo que anulaba el artículo 1 (párrafos primero y segundo, incluyendo la primera frase del segundo párrafo), así como la Disposición Adicional Primera del citado Real Decreto.
-A raíz del recurso interpuesto por la Asociación Nacional para la Salud Animal (ASEMAZ-ASA), los productos cosméticos destinados a animales volvieron a ser considerados productos zoosanitarios, por lo que requerían autorización y registro por parte del Ministerio de Agricultura y Pesca.
-Ahora bien, con la publicación de la Ley 1/2025, de 1 de abril, de prevención de las pérdidas y el desperdicio alimentario, que modifica la Ley 8/2003, de sanidad animal, se elimina definitivamente la obligatoriedad de registro de los productos de higiene, cuidado y manejo de los animales (HCM), así como del material y utillaje zoosanitario (MUZ) para su comercialización. Por tanto, estos productos quedarían fuera del ámbito de competencias del Ministerio.
-Ante esta situación, el pasado mes de junio nos pusimos en contacto con ASEMAZ, quienes nos informaron de lo siguiente:
-Efectivamente, con la publicación de la Ley 1/2015, determinados productos zoosanitarios destinados a higiene, cuidado y manejo de los animales ya no tienen que ser notificados por el titular de los mismos para su comercialización.
-Ahora bien, decimos “determinados” dado que dependiendo del “claim” reivindicado por el producto (biocidas), tendrán las siguientes obligaciones:
-Registro nacional:
-Si se trata de un zoosanitario para uso en entorno ganadero (insecticida, larvicida, desinfectante, etc..) tendrá que solicitarse su registro ante el MAPA como plaguicida, con sus correspondientes ensayos según la eficacia que se quiera defender. La página del MAPA donde podéis informaros es:
+# ---------------- FUNCIÓN DE BÚSQUEDA ----------------
+def buscar_contexto(pregunta, top_k=TOP_K):
+    emb_preg = openai.embeddings.create(model=EMBED_MODEL, input=[pregunta]).data[0].embedding
+    emb_preg = np.array(emb_preg)
+
+    similitudes = consultas_emb @ emb_preg / (
+        np.linalg.norm(consultas_emb, axis=1) * np.linalg.norm(emb_preg) + 1e-10
+    )
+
+    orden = np.argsort(similitudes)[::-1]
+    mejores = [pares[i] for i in orden[:top_k] if similitudes[i] >= SIM_THRESHOLD]
+
+    if not mejores:
+        return None
+
+    contexto = "\n\n".join(
+        [f"Consulta previa: {q}\nRespuesta asociada: {r}" for q, r in mejores]
+    )
+    return contexto
+
+# ---------------- GENERAR RESPUESTA ----------------
+def responder_chatbot(pregunta, frases_forzadas=None):
+    contexto = buscar_contexto(pregunta)
+
+    if not contexto:
+        return "No tengo información interna suficientemente parecida para responder con seguridad."
+
+    # Añadir frases forzadas (si se especifican)
+    citas_extra = ""
+    if frases_forzadas:
+        citas_extra = "\n\nCitas relevantes (de la base interna):\n" + "\n".join(
+            [f"*{f}*" for f in frases_forzadas]
+        )
+
+    prompt = f"""
+Eres un asistente técnico especializado en regulación cosmética y química.
+Responde de manera objetiva, precisa y profesional, basándote únicamente en el siguiente contexto interno y las citas proporcionadas.
+No des opiniones ni recomendaciones; explica solo lo que se desprende de la información.
+Si la base no contiene suficiente información, indícalo claramente.
+
+Contexto interno:
+{contexto}
+{citas_extra}
+
+Consulta:
+{pregunta}
+"""
+
+    respuesta = openai.chat.completions.create(
+        model="gpt-4o",
+        temperature=0,
+        messages=[{"role": "user", "content": prompt}]
+    )
+
+    return respuesta.choices[0].message.content.strip()
+
+# ---------------- INTERFAZ STREAMLIT ----------------
+st.title("💬 Chatbot Regulatorio Interno")
+st.markdown("Asistente basado en tu base interna de consultas y OpenAI GPT-4.")
+
+if "messages" not in st.session_state:
+    st.session_state.messages = []
+
+for msg in st.session_state.messages:
+    with st.chat_message(msg["role"]):
+        st.markdown(msg["content"])
+
+pregunta = st.chat_input("Escribe tu consulta...")
+
+if pregunta:
+    st.session_state.messages.append({"role": "user", "content": pregunta})
+    with st.chat_message("user"):
+        st.markdown(pregunta)
+
+    # Ejemplo: forzar frases concretas para ciertos temas
+    frases_forzadas = None
+    if "animal" in pregunta.lower():
+        frases_forzadas = [
+            """Si se trata de un zoosanitario para uso en entorno ganadero (insecticida, larvicida, desinfectante, etc..) tendrá que solicitarse su registro ante el MAPA como plaguicida, con sus correspondientes ensayos según la eficacia que se quiera defender. La página del MAPA donde podéis informaros es:
 https://www.mapa.gob.es/es/ganaderia/temas/sanidad-animal-higiene-ganadera/Higiene-de-la-produccion…
 Si se trata de un plaguicida no agrícola (desinfectante de uso en la industria alimentaria o uso ambiental, rodenticida, etc..) tendrá que solicitarse su registro ante el SANIDAD como plaguicida no agrícola, con sus correspondientes ensayos según la eficacia que se quiera defender. La página de SANIDAD donde podéis informaros es:
 https://www.sanidad.gob.es/areas/sanidadAmbiental/biocidas/registro/regNacional/requisitos_nacional…
@@ -62,68 +137,8 @@ En todo caso, si los productos que se deseen comercializar estén afectados o no
 No obstante, consideramos que lo conveniente es que vuestra empresa realice la consulta a la autoridad competente correspondiente, para que proporcionen una opinión fundada sobre los productos que desean fabricar/comercializar."""
         ]
 
-    def responder(self, pregunta):
-        frases_relevantes = [
-            f"*{f}*" for f in self.frases_vigentes
-            if any(pal in pregunta.lower() for pal in ["animal", "fabricar", "fabricación", "cosmética", "zoosanitario", "veterinario"])
-        ]
-
-        # Si no hay coincidencias, muestra todas
-        if not frases_relevantes:
-            frases_relevantes = [f"*{f}*" for f in self.frases_vigentes]
-
-        texto = " ".join(frases_relevantes)
-        return f"Según la normativa vigente: {texto}\n\nReciba un cordial saludo,\nDepartamento Técnico."
-
-
-# ================================================================
-# 2️⃣ CHATBOT PRINCIPAL
-# ================================================================
-
-class ChatbotRegulatorio:
-    def __init__(self):
-        self.agente_higiene = AgenteHigieneAnimal()
-
-    def seleccionar_agente(self, pregunta):
-        texto = pregunta.lower()
-
-        if any(pal in texto for pal in ["animal", "zoosanitario", "veterinario", "mascotas", "perros", "gatos"]):
-            return self.agente_higiene
-        elif any(pal in texto for pal in ["biocida", "tp3", "tp4", "plaguicida", "desinfectante"]):
-            return self.agente_biocidas
-        elif any(pal in texto for pal in ["cosmético", "aemps", "cpnp", "1223/2009", "piel", "producto"]):
-            return self.agente_cosmetica
-        else:
-            return self.agente_general
-
-    def responder(self, pregunta):
-        agente = self.seleccionar_agente(pregunta)
-        return agente.responder(pregunta)
-
-
-# ================================================================
-# 3️⃣ INTERFAZ STREAMLIT
-# ================================================================
-
-st.title("💬 Chatbot Regulatorio Interno")
-st.markdown("Consulta dudas técnicas sobre normativa cosmética, biocidas o higiene animal.")
-
-bot = ChatbotRegulatorio()
-
-if "messages" not in st.session_state:
-    st.session_state.messages = []
-
-for msg in st.session_state.messages:
-    with st.chat_message(msg["role"]):
-        st.markdown(msg["content"])
-
-if pregunta := st.chat_input("Escribe tu consulta..."):
-    st.session_state.messages.append({"role": "user", "content": pregunta})
-    with st.chat_message("user"):
-        st.markdown(pregunta)
-
-    respuesta = bot.responder(pregunta)
+    respuesta = responder_chatbot(pregunta, frases_forzadas)
     st.session_state.messages.append({"role": "assistant", "content": respuesta})
+
     with st.chat_message("assistant"):
         st.markdown(respuesta)
-
