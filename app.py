@@ -29,7 +29,7 @@ stop_words = stopwords.words("spanish")
 @st.cache_data(show_spinner=False)
 def cargar_datos():
     try:
-        df = pd.read_excel("conversaciones_estructuradas_revisando.xlsx")
+        df = pd.read_excel("conversaciones_revisando.xlsx")
         df.columns = df.columns.str.strip().str.capitalize()
         df["Role"] = df["Role"].str.lower()
         consultas = df[df["Role"] == "user"]["Content"].fillna("").tolist()
