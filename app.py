@@ -14,29 +14,34 @@ st.set_page_config(page_title="Chatbot Regulatorio Interno", page_icon="💬")
 # 1️⃣ AGENTES ESPECIALIZADOS
 # ================================================================
 
-class AgenteCosmeticaHumana:
-    """Asistente para consultas sobre cosmética humana."""
-    def __init__(self):
-        self.frases_vigentes = [
-            "Los productos cosméticos están regulados por el Reglamento (CE) 1223/2009, aplicable exclusivamente a productos destinados al uso humano.",
-            "La fabricación requiere la presentación de una Declaración Responsable ante la AEMPS, conforme a las Buenas Prácticas de Fabricación (ISO 22716).",
-            "Los productos deben notificarse en el Portal Europeo CPNP antes de su comercialización.",
-            "El Responsable de Producto debe garantizar la seguridad del cosmético y disponer del expediente PIF."
-        ]
-
-    def responder(self, pregunta):
-        frases = "\n".join([f"*{f}*" for f in self.frases_vigentes])
-        return (
-            f"Según la normativa vigente:\n{frases}\n\n"
-            "Reciba un cordial saludo,\nDepartamento Técnico."
-        )
-
-
 class AgenteHigieneAnimal:
     """Asistente para productos de higiene/cuidado animal."""
     def __init__(self):
         self.frases_vigentes = [
-    """Un producto cosmético según el Reglamento (CE) 1223/2009 es toda sustancia o mezcla destinada a ser puesta en contacto con las partes superficiales del cuerpo humano (epidermis, sistema piloso y capilar, uñas, labios, órganos genitales externos) o con los dientes y mucosas bucales, con el fin exclusivo o principal de limpiarlos, perfumarlos, modificar su aspecto, protegerlos, mantenerlos en buen estado o corregir los olores corporales.
+    
+        ]
+
+# ================================================================
+# 💬 Chatbot Regulatorio Interno (versión ampliada con agente específico animal)
+# ================================================================
+
+import os
+import streamlit as st
+import openai
+
+# --- Configuración inicial ---
+openai.api_key = os.getenv("OPENAI_API_KEY")
+st.set_page_config(page_title="Chatbot Regulatorio Interno", page_icon="💬")
+
+# ================================================================
+# 1️⃣ AGENTES ESPECIALIZADOS
+# ================================================================
+
+class AgenteHigieneAnimal:
+    """Asistente específico para productos cosméticos o de higiene destinados a animales."""
+    def __init__(self):
+        self.frases_vigentes = [
+            """Un producto cosmético según el Reglamento (CE) 1223/2009 es toda sustancia o mezcla destinada a ser puesta en contacto con las partes superficiales del cuerpo humano (epidermis, sistema piloso y capilar, uñas, labios, órganos genitales externos) o con los dientes y mucosas bucales, con el fin exclusivo o principal de limpiarlos, perfumarlos, modificar su aspecto, protegerlos, mantenerlos en buen estado o corregir los olores corporales.
 Por tanto, los productos destinados a la higiene animal no se consideran cosméticos según el Reglamento 1223/2009 y quedan fuera de su ámbito de aplicación.
 Te pongo en contexto la situación de estos productos:
 En un principio los productos cosméticos destinados a animales estaban considerados productos zoosanitarios. Con la publicación del Real Decreto 867/2020 estos productos quedaron fuera de su ámbito de aplicación. Sin embargo, en 2023 se publicó una sentencia del Tribunal Supremo que anulaba el artículo 1 (párrafos primero y segundo, incluyendo la primera frase del segundo párrafo), así como la Disposición Adicional Primera del citado Real Decreto.
@@ -58,28 +63,17 @@ No obstante, consideramos que lo conveniente es que vuestra empresa realice la c
         ]
 
     def responder(self, pregunta):
-        frases = "\n".join([f"*{f}*" for f in self.frases_vigentes])
-        return (
-            f"Según la información vigente:\n{frases}\n\n"
-            "Reciba un cordial saludo,\nDepartamento Técnico."
-        )
-
-
-class AgenteBiocidas:
-    """Asistente para productos biocidas (Reglamento 528/2012)."""
-    def __init__(self):
-        self.frases_vigentes = [
-            "Los productos biocidas están regulados por el Reglamento (UE) 528/2012, que establece los requisitos para su autorización y comercialización en la Unión Europea.",
-            "Cada producto debe contener únicamente sustancias activas aprobadas para el tipo de producto (TP) correspondiente.",
-            "Mientras la sustancia activa esté en proceso de evaluación, puede aplicarse la Disposición Transitoria Segunda del RD 1054/2002, que permite su notificación simplificada."
+        frases_relevantes = [
+            f"*{f}*" for f in self.frases_vigentes
+            if any(pal in pregunta.lower() for pal in ["animal", "fabricar", "fabricación", "cosmética", "zoosanitario", "veterinario"])
         ]
 
-    def responder(self, pregunta):
-        frases = "\n".join([f"*{f}*" for f in self.frases_vigentes])
-        return (
-            f"De acuerdo con la normativa vigente:\n{frases}\n\n"
-            "Reciba un cordial saludo,\nDepartamento Técnico."
-        )
+        # Si no hay coincidencias, muestra todas
+        if not frases_relevantes:
+            frases_relevantes = [f"*{f}*" for f in self.frases_vigentes]
+
+        texto = " ".join(frases_relevantes)
+        return f"Según la normativa vigente: {texto}\n\nReciba un cordial saludo,\nDepartamento Técnico."
 
 
 # ================================================================
@@ -88,32 +82,24 @@ class AgenteBiocidas:
 
 class ChatbotRegulatorio:
     def __init__(self):
-        self.agente_cosmetica = AgenteCosmeticaHumana()
         self.agente_higiene = AgenteHigieneAnimal()
-        self.agente_biocidas = AgenteBiocidas()
 
     def seleccionar_agente(self, pregunta):
-        """Detecta el tema y selecciona el agente adecuado."""
         texto = pregunta.lower()
-        if any(pal in texto for pal in ["animal", "veterinario", "zoosanitario"]):
+
+        if any(pal in texto for pal in ["animal", "zoosanitario", "veterinario", "mascotas", "perros", "gatos"]):
             return self.agente_higiene
-        elif any(pal in texto for pal in ["biocida", "tp3", "tp4", "desinfectante", "plaguicida"]):
+        elif any(pal in texto for pal in ["biocida", "tp3", "tp4", "plaguicida", "desinfectante"]):
             return self.agente_biocidas
-        elif any(pal in texto for pal in ["aemps", "cpnp", "humano", "piel", "cosmético", "1223/2009"]):
+        elif any(pal in texto for pal in ["cosmético", "aemps", "cpnp", "1223/2009", "piel", "producto"]):
             return self.agente_cosmetica
         else:
-            return None
+            return self.agente_general
 
     def responder(self, pregunta):
-        """Redirige la consulta al agente adecuado o responde genéricamente."""
         agente = self.seleccionar_agente(pregunta)
-        if agente:
-            return agente.responder(pregunta)
-        else:
-            return (
-                "No se ha identificado un agente especializado para esta consulta. "
-                "Por favor, indique si se refiere a cosmética humana, biocidas o productos de higiene animal."
-            )
+        return agente.responder(pregunta)
+
 
 # ================================================================
 # 3️⃣ INTERFAZ STREAMLIT
@@ -122,27 +108,22 @@ class ChatbotRegulatorio:
 st.title("💬 Chatbot Regulatorio Interno")
 st.markdown("Consulta dudas técnicas sobre normativa cosmética, biocidas o higiene animal.")
 
-# Crear instancia del chatbot
 bot = ChatbotRegulatorio()
 
-# Historial de conversación
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# Mostrar mensajes previos
 for msg in st.session_state.messages:
     with st.chat_message(msg["role"]):
         st.markdown(msg["content"])
 
-# Entrada del usuario
 if pregunta := st.chat_input("Escribe tu consulta..."):
     st.session_state.messages.append({"role": "user", "content": pregunta})
     with st.chat_message("user"):
         st.markdown(pregunta)
 
-    # Obtener respuesta del bot
     respuesta = bot.responder(pregunta)
     st.session_state.messages.append({"role": "assistant", "content": respuesta})
-
     with st.chat_message("assistant"):
         st.markdown(respuesta)
+
