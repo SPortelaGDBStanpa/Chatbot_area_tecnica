@@ -65,7 +65,7 @@ FRASES_POR_TEMA = {
         "“Un producto cosmético, según el Reglamento (CE) nº 1223/2009, es toda sustancia o mezcla destinada a ser puesta en contacto con las partes superficiales del cuerpo humano (epidermis, sistema piloso y capilar, uñas, labios, órganos genitales externos) o con los dientes y mucosas bucales, con el fin exclusivo o principal de limpiarlos, perfumarlos, modificar su aspecto, protegerlos, mantenerlos en buen estado o corregir los olores corporales.”"
     ],
     "cosmética para animales" : [
-        """Los productos destinados a la higiene o cuidado de animales no se consideran cosméticos y quedan fuera del ámbito de aplicación del Reglamento 1223/2009."""
+        "Los productos destinados a la higiene o cuidado de animales no se consideran cosméticos y quedan fuera del ámbito de aplicación del Reglamento 1223/2009."
             
         """En el contexto español, estos productos fueron considerados inicialmente como productos zoosanitarios. Tras la publicación del Real Decreto 867/2020 dejaron de estar incluidos en dicho marco, aunque una sentencia del Tribunal Supremo en 2023 anuló parcialmente ese Real Decreto, devolviendo temporalmente a los productos cosméticos para animales la consideración de zoosanitarios.
  
@@ -120,20 +120,78 @@ def responder_chatbot(pregunta, mostrar_contexto=False):
         if tema in pregunta_lower:
             frases_relevantes.extend(frases)
     
-        # --- 🧩 Filtrar la definición general cuando no aporta valor ---
-    ingredientes = [
-        "formaldehido", "formaldehído", "fenoxietanol", "metanol", "retinol",
-        "plomo", "parabenos", "filtros uv", "filtro uv", "perfume",
-        "fragancia", "conservante", "colorante", "nanomaterial", "biocida"
+        # --- 🧠 Detección avanzada para cosmética animal ---
+    palabras_clave_animales = [
+        "cosmetica animal", "cosmética animal", "cosmetica para animales",
+        "cosmética para animales", "cosmeticos animales", "cosméticos animales",
+        "productos cosméticos destinados a animales", "productos destinados a animales",
+        "fabricar cosméticos para animales", "fabricar productos cosméticos destinados a animales",
+        "fabricación cosmética para animales", "cosmética veterinaria",
+        "higiene animal", "cuidado animal", "cosmética para mascotas", "productos para mascotas"
     ]
 
-    # Si la pregunta se refiere a un ingrediente, eliminar la definición general de cosmético
-    if any(i in pregunta_lower for i in ingredientes):
-        if "cosmético" in FRASES_POR_TEMA:
-            frases_relevantes = [
-                f for f in frases_relevantes
-                if f not in FRASES_POR_TEMA["cosmético"]
-            ]
+    es_cosmetica_animal = any(p in pregunta_lower for p in palabras_clave_animales)
+
+    # Si no coincide por palabra, comprobar similitud semántica con embeddings
+    if not es_cosmetica_animal:
+        try:
+            emb_pregunta = client.embeddings.create(
+                model="text-embedding-3-small",
+                input=pregunta
+            ).data[0].embedding
+
+            emb_animal = client.embeddings.create(
+                model="text-embedding-3-small",
+                input="cosmética para animales, productos cosméticos destinados a animales, higiene animal, fabricación de cosméticos para animales, cosmética veterinaria"
+            ).data[0].embedding
+
+            similitud = cosine_similarity([emb_pregunta], [emb_animal])[0][0]
+            if similitud > 0.75:
+                es_cosmetica_animal = True
+        except Exception as e:
+            print("⚠️ Error en detección semántica de cosmética animal:", e)
+
+    if es_cosmetica_animal:
+        frases_relevantes.extend(FRASES_POR_TEMA.get("cosmética para animales", []))
+    
+    # --- 🧩 Filtrar la definición general cuando no aporta valor ---
+
+    # Palabras clave comunes relacionadas con ingredientes o sustancias
+    palabras_clave_ingredientes = [
+        "formaldehido", "formaldehído", "fenoxietanol", "metanol", "retinol",
+        "plomo", "parabenos", "filtros uv", "filtro uv", "perfume", "fragancia",
+        "conservante", "colorante", "nanomaterial", "biocida", "ingrediente",
+        "sustancia", "compuesto", "aditivo", "alérgeno"
+    ]
+
+    # Detección inicial por palabra
+    es_pregunta_de_ingrediente = any(p in pregunta_lower for p in palabras_clave_ingredientes)
+
+    # Si no hay coincidencias claras, analizar similitud semántica
+    if not es_pregunta_de_ingrediente:
+        try:
+            emb_pregunta = client.embeddings.create(
+                model="text-embedding-3-small",
+                input=pregunta
+            ).data[0].embedding
+
+            emb_ingrediente = client.embeddings.create(
+                model="text-embedding-3-small",
+                input="preguntas sobre ingredientes cosméticos, sustancias prohibidas, conservantes, colorantes o compuestos químicos usados en cosmética"
+            ).data[0].embedding
+
+            similitud_ing = cosine_similarity([emb_pregunta], [emb_ingrediente])[0][0]
+            if similitud_ing > 0.75:
+                es_pregunta_de_ingrediente = True
+        except Exception as e:
+            print("⚠️ Error en detección semántica de ingredientes:", e)
+
+    # Si la pregunta trata de ingredientes, eliminar la definición general del cosmético
+    if es_pregunta_de_ingrediente and "cosmético" in FRASES_POR_TEMA:
+        frases_relevantes = [
+            f for f in frases_relevantes
+            if f not in FRASES_POR_TEMA["cosmético"]
+        ]
 
     # --- 💬 Construir el prompt técnico con afirmación inicial ---
     frases_texto = "\n".join([f"- {f}" for f in frases_relevantes]) if frases_relevantes else ""
@@ -145,7 +203,6 @@ Debes redactar una respuesta **formal, precisa y actualizada**, en tono técnico
 Estructura la respuesta de la siguiente forma:
 
 1️⃣ Comienza con una **afirmación clara y objetiva** sobre la situación normativa del tema preguntado.
-   (Ejemplo: “El uso de formaldehído en productos cosméticos comercializados en la Unión Europea está regulado por el Reglamento (CE) nº 1223/2009.”)
 2️⃣ Desarrolla a continuación una explicación completa con el contexto legal y técnico.
 3️⃣ Finaliza con la despedida establecida.
 
@@ -158,8 +215,10 @@ Departamento Técnico."
 ⚖️ Instrucciones:
 - No inventes ni reformules información.
 - No incluyas recomendaciones ni valoraciones personales.
-- **Debes incluir literalmente las siguientes frases normativas**, sin modificarlas ni traducirlas:
+- **Integra las siguientes frases normativas** en el texto *sin usar comillas ni indicar que son citas*. 
+Inclúyelas con naturalidad, en cursiva, dentro del cuerpo de la respuesta:
 {frases_texto}
+
 - Inserta las frases donde encajen naturalmente en el desarrollo.
 - El resto del texto debe complementar las frases con explicaciones objetivas y actuales.
 
