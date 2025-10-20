@@ -24,7 +24,7 @@ nltk.download("stopwords", quiet=True)
 stop_words = stopwords.words("spanish")
 
 # --- 1️⃣ Cargar el dataset ---
-ruta_excel = "C:/Users/susana.portela/OneDrive - Asociación Nacional de Perfumería y Cosmética/Documentos/Chatbot_area_tecnica/conversaciones_revisando.xlsx"
+ruta_excel = "conversaciones_revisando.xlsx"
 df = pd.read_excel(ruta_excel)
 
 # Normalizar nombres
