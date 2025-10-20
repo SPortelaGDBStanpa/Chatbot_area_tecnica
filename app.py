@@ -6,9 +6,9 @@
 import os
 from openai import OpenAI
 import pandas as pd
+import numpy as np
 import nltk
 from sklearn.metrics.pairwise import cosine_similarity
-from sklearn.feature_extraction.text import TfidfVectorizer
 from nltk.corpus import stopwords
 import streamlit as st
 
@@ -43,15 +43,29 @@ if "fecha" in df.columns:
     df = df.sort_values(by="fecha", ascending=False)
     print("🕒 Datos ordenados por fecha (más recientes primero).")
 
-# 3️⃣ VECTORIZAR CONSULTAS (TF-IDF)
-vectorizador = TfidfVectorizer(stop_words=stop_words)
-X = vectorizador.fit_transform([c for c, _ in pares])
+# ==============================================
+# 3️⃣ CREAR EMBEDDINGS (una sola vez)
+# ==============================================
+@st.cache_data(show_spinner=False)
+def crear_embeddings(textos):
+    """Genera los embeddings de las consultas almacenadas."""
+    embeddings = []
+    for texto in textos:
+        r = client.embeddings.create(model="text-embedding-3-small", input=texto)
+        embeddings.append(r.data[0].embedding)
+    return np.array(embeddings)
 
-# --- 4️⃣ Buscar contexto relevante ---
-def buscar_contexto(pregunta, top_k=3):
-    """Devuelve las respuestas más parecidas a la pregunta."""
-    pregunta_vec = vectorizador.transform([pregunta])
-    similitudes = cosine_similarity(pregunta_vec, X).flatten()
+emb_consultas = crear_embeddings([c for c, _ in pares])
+
+# ==============================================
+# 4️⃣ Buscar contexto relevante con embeddings
+# ==============================================
+def buscar_contexto(pregunta, top_k=5):
+    """Busca las respuestas más similares semánticamente."""
+    emb_pregunta = client.embeddings.create(
+        model="text-embedding-3-small", input=pregunta
+    ).data[0].embedding
+    similitudes = cosine_similarity([emb_pregunta], emb_consultas)[0]
     indices = similitudes.argsort()[-top_k:][::-1]
     fragmentos = [pares[i][1] for i in indices]
     return fragmentos
