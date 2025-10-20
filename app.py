@@ -41,7 +41,7 @@ pares = list(zip(consultas, respuestas))
 # 2️⃣ CARGAR EMBEDDINGS PRECALCULADOS
 # ==============================================
 try:
-    emb_consultas = np.load("emb_consultas.npy")
+    emb_consultas = np.load("emb_consultas_comprimido.npz")["emb"]
     print("✅ Embeddings cargados correctamente.")
 except FileNotFoundError:
     st.error("❌ No se encontró el archivo 'emb_consultas.npy'. Genera primero los embeddings con 'generar_embeddings_excel.py'.")
