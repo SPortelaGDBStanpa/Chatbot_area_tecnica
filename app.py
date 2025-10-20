@@ -37,25 +37,15 @@ respuestas = df[df["role"].str.lower() == "assistant"]["content"].tolist()
 # Asegurar que haya pares del mismo tamaño
 pares = list(zip(consultas, respuestas))
 
-# --- Ordenar por fecha (más recientes primero) ---
-if "fecha" in df.columns:
-    df["fecha"] = pd.to_datetime(df["fecha"], errors="coerce")
-    df = df.sort_values(by="fecha", ascending=False)
-    print("🕒 Datos ordenados por fecha (más recientes primero).")
-
 # ==============================================
-# 3️⃣ CREAR EMBEDDINGS (una sola vez)
+# 2️⃣ CARGAR EMBEDDINGS PRECALCULADOS
 # ==============================================
-@st.cache_data(show_spinner=False)
-def crear_embeddings(textos):
-    """Genera los embeddings de las consultas almacenadas."""
-    embeddings = []
-    for texto in textos:
-        r = client.embeddings.create(model="text-embedding-3-small", input=texto)
-        embeddings.append(r.data[0].embedding)
-    return np.array(embeddings)
-
-emb_consultas = crear_embeddings([c for c, _ in pares])
+try:
+    emb_consultas = np.load("emb_consultas.npy")
+    print("✅ Embeddings cargados correctamente.")
+except FileNotFoundError:
+    st.error("❌ No se encontró el archivo 'emb_consultas.npy'. Genera primero los embeddings con 'generar_embeddings_excel.py'.")
+    st.stop()
 
 # ==============================================
 # 4️⃣ Buscar contexto relevante con embeddings
@@ -124,18 +114,11 @@ def responder_chatbot(pregunta, mostrar_contexto=False):
 
     contexto = "\n\n".join(fragmentos)
 
-    # --- 🧠 Detectar tema y añadir frases predefinidas ---
+    # --- Detectar tema ---
     frases_relevantes = []
     for tema, frases in FRASES_POR_TEMA.items():
         if tema in pregunta_lower:
             frases_relevantes.extend(frases)
-
-    # Detección robusta para cosmética animal
-    if any(k in pregunta_lower for k in [
-        "cosmetica para animales", "cosmética para animales", "cosméticos para animales",
-        "productos cosméticos animales", "cosmética animal"
-    ]):
-        frases_relevantes.extend(FRASES_POR_TEMA.get("cosmética para animales", []))
     
         # --- 🧩 Filtrar la definición general cuando no aporta valor ---
     ingredientes = [
@@ -153,9 +136,9 @@ def responder_chatbot(pregunta, mostrar_contexto=False):
             ]
 
     # --- 💬 Construir el prompt técnico con afirmación inicial ---
-    if frases_relevantes:
-        frases_texto = "\n".join([f"- {f}" for f in frases_relevantes])
-        prompt = f"""
+    frases_texto = "\n".join([f"- {f}" for f in frases_relevantes]) if frases_relevantes else ""
+
+    prompt = f"""
 Eres un asistente experto en legislación cosmética, biocidas y productos regulados.
 
 Debes redactar una respuesta **formal, precisa y actualizada**, en tono técnico.
@@ -187,26 +170,6 @@ Contexto normativo (solo para ampliar datos coherentes con las frases anteriores
 ---
 Pregunta:
 {pregunta}
-"""
-    else:
-        prompt = f"""
-Eres un asistente experto en legislación cosmética, biocidas y productos regulados.
-
-Redacta una respuesta **formal, precisa y actualizada**, con la siguiente estructura:
-
-1️⃣ Empieza con una afirmación clara y objetiva sobre la normativa aplicable.
-2️⃣ Explica de forma técnica y completa los detalles legales o reglamentarios.
-3️⃣ Termina con la despedida institucional fija.
-
-Incluye un saludo profesional al inicio y la siguiente despedida al final:
-
-"Espero haber sido de utilidad y si necesita alguna cosa más, estamos a su disposición.
-Reciba un cordial saludo,
-Departamento Técnico."
-
----
-Contexto:
-{contexto}
 
 ---
 Pregunta:
