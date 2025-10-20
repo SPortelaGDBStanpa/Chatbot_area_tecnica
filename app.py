@@ -218,7 +218,6 @@ Departamento Técnico."
 - **Debes incluir literalmente las siguientes frases normativas en el texto final, sin cambiar ni una palabra, sin resumir ni parafrasear.** 
 - Escríbelas *exactamente* como aparecen a continuación, en cursiva, dentro del cuerpo de la respuesta:
 {frases_texto}
-- Si no encajan de forma natural, introdúcelas con una breve transición (por ejemplo, “Tal como indica el reglamento:”).
 
 - Inserta las frases donde encajen naturalmente en el desarrollo.
 - El resto del texto debe complementar las frases con explicaciones objetivas y actuales.
