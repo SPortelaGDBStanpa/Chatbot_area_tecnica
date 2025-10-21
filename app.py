@@ -123,7 +123,7 @@ def responder_chatbot(pregunta, mostrar_contexto=False):
         # --- 🧠 Detección avanzada para cosmética animal ---
     palabras_clave_animales = [
         "cosmetica animal", "cosmética animal", "cosmetica para animales",
-        "cosmética para animales", "cosmeticos animales", "cosméticos animales",
+        "cosmética para animales", "cosmeticos animales", "cosméticos animales", "cosméticos destinados a animales",
         "productos cosméticos destinados a animales", "productos destinados a animales",
         "fabricar cosméticos para animales", "fabricar productos cosméticos destinados a animales",
         "fabricación cosmética para animales", "cosmética veterinaria",
