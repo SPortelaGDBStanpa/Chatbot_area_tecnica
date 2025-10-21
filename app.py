@@ -132,6 +132,10 @@ def responder_chatbot(pregunta, mostrar_contexto=False):
 
     es_cosmetica_animal = any(p in pregunta_lower for p in palabras_clave_animales)
 
+    # Si hay mención de animales + fabricación o declaración -> forzar cosmética animal
+    if any(p in pregunta_lower for p in ["animal", "animales"]) and any(k in pregunta_lower for k in ["fabricación", "fabricar", "declaración responsable", "registro"]):
+        es_cosmetica_animal = True
+
     # Si no coincide por palabra, comprobar similitud semántica con embeddings
     if not es_cosmetica_animal:
         try:
