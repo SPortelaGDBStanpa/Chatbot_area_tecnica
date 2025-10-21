@@ -378,6 +378,7 @@ if st.button("Enviar"):
     if pregunta.strip():
         with st.spinner("Analizando consulta..."):
             respuesta = responder_chatbot(pregunta)
+            respuesta = respuesta.replace("\n", "  \n")
         st.markdown(f"### 💬 Respuesta:\n\n{respuesta}", unsafe_allow_html=True)
     else:
         st.warning("Por favor, escribe una consulta antes de enviar.")
