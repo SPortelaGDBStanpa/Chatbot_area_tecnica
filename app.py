@@ -266,6 +266,20 @@ def responder_chatbot(pregunta, mostrar_contexto=False):
 
     if es_cosmetica_animal:
         frases_texto = "\n".join(["- " + " ".join(FRASES_POR_TEMA.get("cosmetica para animales", []))])
+    
+    # --- 🔎 Detección directa de consultas internacionales ---
+    palabras_internacional = [
+        "exportar", "exportación", "países fuera de la ue", "fuera de la unión europea",
+        "requisitos en otros países", "australia", "nueva zelanda", "ee.uu.", "eeuu", "china"
+    ]
+    if any(p in pregunta_sin_acentos for p in palabras_internacional):
+        return (
+            f"{saludo}\n\n"
+            "Esta consulta corresponde al ámbito internacional. "
+            "Le recomendamos contactar con el **Departamento Internacional** escribiendo a "
+            "**stanpainternacional@stanpa.com** para obtener información sobre requisitos de exportación y normativa fuera de la UE.\n\n"
+            f"{despedida}"
+    )
 
     prompt = f"""
     Eres un asistente experto en legislación cosmética, biocidas y productos regulados.
