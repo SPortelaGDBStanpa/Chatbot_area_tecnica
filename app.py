@@ -31,18 +31,37 @@ def detectar_redireccion(fragmentos):
     return any(p in texto_unido for p in palabras_clave)
 
 def extraer_redireccion(fragmentos):
-    """Extrae el fragmento que contiene una instrucción de redirección e identifica el departamento."""
-    for frag in fragmentos:
-        if any(p in frag.lower() for p in [
-            "contacte con", "diríjase a", "consulte con", "responsabilidad de", "departamento de"
-        ]):
-            for palabra in ["medio ambiente", "jurídico", "toxicología", "autoridad competente", "seguridad del producto"]:
-                if palabra in frag.lower():
-                    return f"{frag.strip()} (Corresponde al departamento de {palabra.capitalize()})."
-            # Si no encuentra una palabra clave específica, devuelve el texto original
-            return frag.strip()
-    return None
+    """Extrae el fragmento que contiene una instrucción de redirección e identifica el departamento o responsable."""
+    palabras_clave = [
+        "contacte con", "diríjase a", "debe consultarlo con", "responsabilidad de",
+        "departamento de", "servicio de", "autoridad competente", "remítase a",
+        "redirigirse a", "consultar con", "trasladar la consulta a", "deberás escribir un correo",
+        "deberás enviar un correo", "correo a la dirección", "puedes contactar con",
+        "escriba a", "escribir a", "envíe un correo", "mandar un correo"
+    ]
 
+    departamentos = [
+        "internacional", "reglamentación", "toxicología", "formulación",
+        "medio ambiente", "jurídico", "seguridad del producto",
+        "autoridad competente", "asuntos científicos", "asuntos regulatorios"
+    ]
+
+    for frag in fragmentos:
+        texto = frag.lower()
+        if any(p in texto for p in palabras_clave):
+            # Buscar si se menciona un departamento específico
+            for palabra in departamentos:
+                if palabra in texto:
+                    return f"{frag.strip()} (Corresponde al departamento de {palabra.capitalize()})."
+
+            # Buscar si hay dirección de correo
+            if "@" in frag:
+                return f"{frag.strip()} (Se indica una dirección de correo para contacto directo)."
+
+            # Si no encuentra nada específico, devuelve el fragmento original
+            return frag.strip()
+
+    return None
 
 # ==============================================
 # 1️⃣ CONFIGURACIÓN INICIAL
