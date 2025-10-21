@@ -20,6 +20,30 @@ def quitar_acentos(texto):
         if unicodedata.category(c) != 'Mn'
     )
 
+def detectar_redireccion(fragmentos):
+    """Detecta si alguna respuesta del contexto indica redirección a otro departamento."""
+    palabras_clave = [
+        "contacte con", "diríjase a", "debe consultarlo con", "responsabilidad de",
+        "departamento de", "servicio de", "autoridad competente", "remítase a",
+        "redirigirse a", "consultar con", "trasladar la consulta a"
+    ]
+    texto_unido = " ".join(fragmentos).lower()
+    return any(p in texto_unido for p in palabras_clave)
+
+def extraer_redireccion(fragmentos):
+    """Extrae el fragmento que contiene una instrucción de redirección e identifica el departamento."""
+    for frag in fragmentos:
+        if any(p in frag.lower() for p in [
+            "contacte con", "diríjase a", "consulte con", "responsabilidad de", "departamento de"
+        ]):
+            for palabra in ["medio ambiente", "jurídico", "toxicología", "autoridad competente", "seguridad del producto"]:
+                if palabra in frag.lower():
+                    return f"{frag.strip()} (Corresponde al departamento de {palabra.capitalize()})."
+            # Si no encuentra una palabra clave específica, devuelve el texto original
+            return frag.strip()
+    return None
+
+
 # ==============================================
 # 1️⃣ CONFIGURACIÓN INICIAL
 # ==============================================
@@ -52,7 +76,7 @@ try:
     emb_consultas = np.load("emb_consultas_comprimido.npz")["emb"]
     print("✅ Embeddings cargados correctamente.")
 except FileNotFoundError:
-    st.error("❌ No se encontró el archivo 'emb_consultas.npy'. Genera primero los embeddings con 'generar_embeddings_excel.py'.")
+    st.error("❌ No se encontró el archivo 'emb_consultas_comprimido.npz'. Genera primero los embeddings con 'generar_embeddings_excel.py'.")
     st.stop()
 
 # ==============================================
@@ -75,7 +99,7 @@ FRASES_POR_TEMA = {
         "“Un producto cosmético, según el Reglamento (CE) nº 1223/2009, es toda sustancia o mezcla destinada a ser puesta en contacto con las partes superficiales del cuerpo humano (epidermis, sistema piloso y capilar, uñas, labios, órganos genitales externos) o con los dientes y mucosas bucales, con el fin exclusivo o principal de limpiarlos, perfumarlos, modificar su aspecto, protegerlos, mantenerlos en buen estado o corregir los olores corporales.”"
     ],
     "cosmetica para animales" : [
-        """Los productos destinados a la higiene o cuidado de animales no se consideran cosméticos y quedan fuera del ámbito de aplicación del Reglamento 1223/2009.,
+        """Los productos destinados a la higiene o cuidado de animales no se consideran cosméticos y quedan fuera del ámbito de aplicación del Reglamento 1223/2009.
             
         En el contexto español, estos productos fueron considerados inicialmente como productos zoosanitarios. Tras la publicación del Real Decreto 867/2020 dejaron de estar incluidos en dicho marco, aunque una sentencia del Tribunal Supremo en 2023 anuló parcialmente ese Real Decreto, devolviendo temporalmente a los productos cosméticos para animales la consideración de zoosanitarios.
  
@@ -122,6 +146,18 @@ def responder_chatbot(pregunta, mostrar_contexto=False):
     fragmentos = buscar_contexto(pregunta)
     if not fragmentos:
         return "No encontré información relevante en la base de datos. ¿Podrías reformular la pregunta?"
+
+    # --- 🧩 Detección de redirección ---
+    if detectar_redireccion(fragmentos):
+        redireccion_texto = extraer_redireccion(fragmentos)
+        if redireccion_texto:
+            return f"{saludo}\n\n{redireccion_texto}\n\n{despedida}"
+        else:
+            return (
+                f"{saludo}\n\nLa consulta que plantea corresponde a otro ámbito de competencia. "
+                "Le recomendamos trasladarla al departamento o autoridad competente indicada en los procedimientos internos.\n\n"
+                f"{despedida}"
+            )
 
     contexto = "\n\n".join(fragmentos)
 
