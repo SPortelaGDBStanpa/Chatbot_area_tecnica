@@ -11,6 +11,14 @@ import nltk
 from sklearn.metrics.pairwise import cosine_similarity
 from nltk.corpus import stopwords
 import streamlit as st
+import unicodedata
+
+def quitar_acentos(texto):
+    """Elimina acentos y caracteres diacríticos de un texto."""
+    return ''.join(
+        c for c in unicodedata.normalize('NFD', texto)
+        if unicodedata.category(c) != 'Mn'
+    )
 
 # ==============================================
 # 1️⃣ CONFIGURACIÓN INICIAL
@@ -52,8 +60,10 @@ except FileNotFoundError:
 # ==============================================
 def buscar_contexto(pregunta, top_k=5):
     """Busca las respuestas más similares semánticamente."""
+    pregunta_sin_acentos = quitar_acentos(pregunta.lower())
     emb_pregunta = client.embeddings.create(
-        model="text-embedding-3-small", input=pregunta
+        model="text-embedding-3-small",
+        input=pregunta_sin_acentos
     ).data[0].embedding
     similitudes = cosine_similarity([emb_pregunta], emb_consultas)[0]
     indices = similitudes.argsort()[-top_k:][::-1]
@@ -61,11 +71,11 @@ def buscar_contexto(pregunta, top_k=5):
     return fragmentos
 
 FRASES_POR_TEMA = {
-    "cosmético": [
+    "cosmetico": [
         "“Un producto cosmético, según el Reglamento (CE) nº 1223/2009, es toda sustancia o mezcla destinada a ser puesta en contacto con las partes superficiales del cuerpo humano (epidermis, sistema piloso y capilar, uñas, labios, órganos genitales externos) o con los dientes y mucosas bucales, con el fin exclusivo o principal de limpiarlos, perfumarlos, modificar su aspecto, protegerlos, mantenerlos en buen estado o corregir los olores corporales.”"
     ],
-    "cosmética para animales" : [
-        """Los productos destinados a la higiene o cuidado de animales no se consideran cosméticos y quedan fuera del ámbito de aplicación del Reglamento 1223/2009.",
+    "cosmetica para animales" : [
+        """Los productos destinados a la higiene o cuidado de animales no se consideran cosméticos y quedan fuera del ámbito de aplicación del Reglamento 1223/2009.,
             
         En el contexto español, estos productos fueron considerados inicialmente como productos zoosanitarios. Tras la publicación del Real Decreto 867/2020 dejaron de estar incluidos en dicho marco, aunque una sentencia del Tribunal Supremo en 2023 anuló parcialmente ese Real Decreto, devolviendo temporalmente a los productos cosméticos para animales la consideración de zoosanitarios.
  
@@ -107,6 +117,8 @@ def responder_chatbot(pregunta, mostrar_contexto=False):
     )
 
     pregunta_lower = pregunta.lower()
+    pregunta_sin_acentos = quitar_acentos(pregunta_lower)
+
     fragmentos = buscar_contexto(pregunta)
     if not fragmentos:
         return "No encontré información relevante en la base de datos. ¿Podrías reformular la pregunta?"
@@ -116,23 +128,22 @@ def responder_chatbot(pregunta, mostrar_contexto=False):
     # --- Detectar tema ---
     frases_relevantes = []
     for tema, frases in FRASES_POR_TEMA.items():
-        if tema in pregunta_lower:
+        if tema in pregunta_sin_acentos:
             frases_relevantes.extend(frases)
     
-        # --- 🧠 Detección avanzada para cosmética animal ---
+    # --- 🧠 Detección avanzada para cosmética animal ---
     palabras_clave_animales = [
-        "cosmetica animal", "cosmética animal", "cosmetica para animales",
-        "cosmética para animales", "cosmeticos animales", "cosméticos animales", "cosméticos destinados a animales",
-        "productos cosméticos destinados a animales", "productos destinados a animales",
-        "fabricar cosméticos para animales", "fabricar productos cosméticos destinados a animales",
-        "fabricación cosmética para animales", "cosmética veterinaria",
-        "higiene animal", "cuidado animal", "cosmética para mascotas", "productos para mascotas"
+        "cosmetica animal", "cosmetica para animales", "cosmeticos animales", "cosmeticos destinados a animales",
+        "productos cosmeticos destinados a animales", "productos destinados a animales",
+        "fabricar cosmeticos para animales", "fabricar productos cosmeticos destinados a animales",
+        "fabricación cosmetica para animales", "cosmetica veterinaria",
+        "higiene animal", "cuidado animal", "cosmetica para mascotas", "productos para mascotas"
     ]
 
-    es_cosmetica_animal = any(p in pregunta_lower for p in palabras_clave_animales)
+    es_cosmetica_animal = any(p in pregunta_sin_acentos for p in palabras_clave_animales)
 
     # Si hay mención de animales + fabricación o declaración -> forzar cosmética animal
-    if any(p in pregunta_lower for p in ["animal", "animales"]) and any(k in pregunta_lower for k in ["fabricación", "fabricar", "declaración responsable", "registro"]):
+    if any(p in pregunta_sin_acentos for p in ["animal", "animales"]) and any(k in pregunta_sin_acentos for k in ["fabricación", "fabricar", "declaración responsable", "registro"]):
         es_cosmetica_animal = True
 
     # Si no coincide por palabra, comprobar similitud semántica con embeddings
@@ -155,20 +166,19 @@ def responder_chatbot(pregunta, mostrar_contexto=False):
             print("⚠️ Error en detección semántica de cosmética animal:", e)
 
     if es_cosmetica_animal:
-        frases_relevantes.extend(FRASES_POR_TEMA.get("cosmética para animales", []))
+        frases_relevantes.extend(FRASES_POR_TEMA.get("cosmetica para animales", []))
     
     # --- 🧩 Filtrar la definición general cuando no aporta valor ---
 
     # Palabras clave comunes relacionadas con ingredientes o sustancias
     palabras_clave_ingredientes = [
-        "formaldehido", "formaldehído", "fenoxietanol", "metanol", "retinol",
-        "plomo", "parabenos", "filtros uv", "filtro uv", "perfume", "fragancia",
-        "conservante", "colorante", "nanomaterial", "biocida", "ingrediente",
-        "sustancia", "compuesto", "aditivo", "alérgeno"
+        "formaldehido", "fenoxietanol", "metanol", "retinol", "plomo", "parabenos", "filtros uv", "filtro uv", "perfume", "fragancia",
+        "conservante", "colorante", "nanomaterial", "biocida", "ingrediente", "sustancia", "compuesto", "aditivo", "alergeno"
     ]
 
     # Detección inicial por palabra
-    es_pregunta_de_ingrediente = any(p in pregunta_lower for p in palabras_clave_ingredientes)
+    es_pregunta_de_ingrediente = any(p in pregunta_sin_acentos for p in palabras_clave_ingredientes)
+
 
     # Si no hay coincidencias claras, analizar similitud semántica
     if not es_pregunta_de_ingrediente:
@@ -190,18 +200,17 @@ def responder_chatbot(pregunta, mostrar_contexto=False):
             print("⚠️ Error en detección semántica de ingredientes:", e)
 
     # Si la pregunta trata de ingredientes, eliminar la definición general del cosmético
-    if es_pregunta_de_ingrediente and "cosmético" in FRASES_POR_TEMA:
+    if es_pregunta_de_ingrediente and "cosmetico" in FRASES_POR_TEMA:
         frases_relevantes = [
             f for f in frases_relevantes
-            if f not in FRASES_POR_TEMA["cosmético"]
+            if f not in FRASES_POR_TEMA["cosmetico"]
         ]
 
     # Si el tema detectado es cosmética animal, unir todas las frases en una sola para asegurar que el bloque completo se incluye
-    if es_cosmetica_animal:
-        frases_texto = "\n".join(["- " + " ".join(FRASES_POR_TEMA.get("cosmética para animales", []))])
-
-    # --- 💬 Construir el prompt técnico con afirmación inicial ---
     frases_texto = "\n".join([f"- {f}" for f in frases_relevantes]) if frases_relevantes else ""
+
+    if es_cosmetica_animal:
+        frases_texto = "\n".join(["- " + " ".join(FRASES_POR_TEMA.get("cosmetica para animales", []))])
 
     prompt = f"""
     Eres un asistente experto en legislación cosmética, biocidas y productos regulados.
@@ -235,10 +244,6 @@ def responder_chatbot(pregunta, mostrar_contexto=False):
     ---
     Contexto normativo (solo para ampliar datos coherentes con las frases anteriores):
     {contexto}
-
-    ---
-    Pregunta:
-    {pregunta}
 
     ---
     Pregunta:
