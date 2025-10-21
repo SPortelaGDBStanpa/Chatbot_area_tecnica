@@ -197,6 +197,10 @@ def responder_chatbot(pregunta, mostrar_contexto=False):
             if f not in FRASES_POR_TEMA["cosmético"]
         ]
 
+    # Si el tema detectado es cosmética animal, unir todas las frases en una sola para asegurar que el bloque completo se incluye
+    if es_cosmetica_animal:
+        frases_texto = "\n".join(["- " + " ".join(FRASES_POR_TEMA.get("cosmética para animales", []))])
+
     # --- 💬 Construir el prompt técnico con afirmación inicial ---
     frases_texto = "\n".join([f"- {f}" for f in frases_relevantes]) if frases_relevantes else ""
 
@@ -219,9 +223,10 @@ Departamento Técnico."
 ⚖️ Instrucciones:
 - No inventes ni reformules información.
 - No incluyas recomendaciones ni valoraciones personales.
-- **Debes incluir literalmente las siguientes frases normativas en el texto final, sin cambiar ni una palabra, sin resumir ni parafrasear.** 
-- Escríbelas *exactamente* como aparecen a continuación, en cursiva, dentro del cuerpo de la respuesta:
+- **Debes incluir en la respuesta todas las frases normativas listadas a continuación, sin omitir ninguna parte, sin resumir ni reescribirlas.**
+- Cada una de ellas debe aparecer *exactamente como está redactada* (sin comillas), en cursiva, dentro del texto final:
 {frases_texto}
+- Si una frase es larga, inclúyela completa, no resumida.
 
 - Inserta las frases donde encajen naturalmente en el desarrollo.
 - El resto del texto debe complementar las frases con explicaciones objetivas y actuales.
