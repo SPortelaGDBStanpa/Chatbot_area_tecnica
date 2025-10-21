@@ -65,9 +65,9 @@ FRASES_POR_TEMA = {
         "“Un producto cosmético, según el Reglamento (CE) nº 1223/2009, es toda sustancia o mezcla destinada a ser puesta en contacto con las partes superficiales del cuerpo humano (epidermis, sistema piloso y capilar, uñas, labios, órganos genitales externos) o con los dientes y mucosas bucales, con el fin exclusivo o principal de limpiarlos, perfumarlos, modificar su aspecto, protegerlos, mantenerlos en buen estado o corregir los olores corporales.”"
     ],
     "cosmética para animales" : [
-        "Los productos destinados a la higiene o cuidado de animales no se consideran cosméticos y quedan fuera del ámbito de aplicación del Reglamento 1223/2009.",
+        """Los productos destinados a la higiene o cuidado de animales no se consideran cosméticos y quedan fuera del ámbito de aplicación del Reglamento 1223/2009.",
             
-        """En el contexto español, estos productos fueron considerados inicialmente como productos zoosanitarios. Tras la publicación del Real Decreto 867/2020 dejaron de estar incluidos en dicho marco, aunque una sentencia del Tribunal Supremo en 2023 anuló parcialmente ese Real Decreto, devolviendo temporalmente a los productos cosméticos para animales la consideración de zoosanitarios.
+        En el contexto español, estos productos fueron considerados inicialmente como productos zoosanitarios. Tras la publicación del Real Decreto 867/2020 dejaron de estar incluidos en dicho marco, aunque una sentencia del Tribunal Supremo en 2023 anuló parcialmente ese Real Decreto, devolviendo temporalmente a los productos cosméticos para animales la consideración de zoosanitarios.
  
         Finalmente, con la Ley 1/2025, de 1 de abril, que modifica la Ley 8/2003 de sanidad animal, se elimina la obligatoriedad de registro de los productos de higiene, cuidado y manejo de animales (HCM) y del material y utillaje zoosanitario (MUZ). En consecuencia, estos productos quedan fuera del ámbito competencial del Ministerio de Agricultura y Pesca.
 
@@ -84,8 +84,7 @@ FRASES_POR_TEMA = {
 
         En todo caso, si los productos que se deseen comercializar estén afectados o no por lo indicado anteriormente, son productos químicos peligrosos (mezclas o sustancias) quedarán afectados por la normativa de clasificación y etiquetado de mezclas y sustancias químicas, debiendo estar debidamente etiquetados, contar con ficha de datos de seguridad (FDS) y ser notificados a toxicología a través de un expediente PCN.
 
-        Por tanto, tal y como recomiendan desde ASEMAZ, lo más conveniente es poneros en contacto con la autoridad competente correspondiente para que os puedan dar información detallada.
-        """
+        Por tanto, tal y como recomiendan desde ASEMAZ, lo más conveniente es poneros en contacto con la autoridad competente correspondiente para que os puedan dar información detallada."""
     ]
 }
 
@@ -205,44 +204,47 @@ def responder_chatbot(pregunta, mostrar_contexto=False):
     frases_texto = "\n".join([f"- {f}" for f in frases_relevantes]) if frases_relevantes else ""
 
     prompt = f"""
-Eres un asistente experto en legislación cosmética, biocidas y productos regulados.
+    Eres un asistente experto en legislación cosmética, biocidas y productos regulados.
 
-Debes redactar una respuesta **formal, precisa y actualizada**, en tono técnico.
-Estructura la respuesta de la siguiente forma:
+    Debes redactar una respuesta **formal, precisa y actualizada**, en tono técnico.
+    Estructura la respuesta de la siguiente forma:
 
-1️⃣ Comienza con una **afirmación clara y objetiva** sobre la situación normativa del tema preguntado.
-2️⃣ Desarrolla a continuación una explicación completa con el contexto legal y técnico.
-3️⃣ Finaliza con la despedida establecida.
+    1️⃣ Comienza con una **afirmación clara y objetiva** sobre la situación normativa del tema preguntado.
+    2️⃣ Desarrolla a continuación una explicación completa con el contexto legal y técnico.
+    3️⃣ Finaliza con la despedida establecida.
 
-La respuesta debe empezar con un saludo (“Buenos días,” / “Buenas tardes,”) y finalizar con:
+    La respuesta debe empezar con un saludo (“Buenos días,” / “Buenas tardes,”) y finalizar con:
 
-"Espero haber sido de utilidad y si necesita alguna cosa más, estamos a su disposición.
-Reciba un cordial saludo,
-Departamento Técnico."
+    "Espero haber sido de utilidad y si necesita alguna cosa más, estamos a su disposición.
+    Reciba un cordial saludo,
+    Departamento Técnico."
 
-⚖️ Instrucciones:
-- No inventes ni reformules información.
-- No incluyas recomendaciones ni valoraciones personales.
-- **Debes incluir en la respuesta todas las frases normativas listadas a continuación, sin omitir ninguna parte, sin resumir ni reescribirlas.**
-- Cada una de ellas debe aparecer *exactamente como está redactada* (sin comillas), en cursiva, dentro del texto final:
-{frases_texto}
-- Si una frase es larga, inclúyela completa, no resumida.
+    ⚖️ Instrucciones:
+    - No inventes ni reformules información.
+    - No incluyas recomendaciones ni valoraciones personales.
+    - **Debes incluir en la respuesta todas las frases normativas listadas a continuación, sin omitir ninguna parte, sin resumir ni reescribirlas.**
+    - Cada una de ellas debe aparecer *exactamente como está redactada* (sin comillas), en cursiva, dentro del texto final:
+    {frases_texto}
+    - **Mantén la estructura y el formato técnico** de la información (por ejemplo, listas con guiones, subtítulos en negrita como “Registro nacional”, saltos de línea, etc.).
+    - Si la información incluye secciones con guiones o subtítulos, reprodúcelas con formato Markdown igual al original.
+    - No transformes las listas en párrafos corridos.
 
-- Inserta las frases donde encajen naturalmente en el desarrollo.
-- El resto del texto debe complementar las frases con explicaciones objetivas y actuales.
+    - Inserta las frases donde encajen naturalmente en el desarrollo.
+    - El resto del texto debe complementar las frases con explicaciones objetivas y actuales.
 
----
-Contexto normativo (solo para ampliar datos coherentes con las frases anteriores):
-{contexto}
+    ---
+    Contexto normativo (solo para ampliar datos coherentes con las frases anteriores):
+    {contexto}
 
----
-Pregunta:
-{pregunta}
+    ---
+    Pregunta:
+    {pregunta}
 
----
-Pregunta:
-{pregunta}
-"""
+    ---
+    Pregunta:
+    {pregunta}
+    """
+    prompt += "\n\nRecuerda: conserva la estructura original (listas, títulos y saltos de línea) del texto normativo."
 
     # --- 🔗 Llamada al modelo ---
     respuesta = client.chat.completions.create(
