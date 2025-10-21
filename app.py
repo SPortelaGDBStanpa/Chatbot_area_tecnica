@@ -141,6 +141,35 @@ FRASES_POR_TEMA = {
     ]
 }
 
+# ==============================================
+# 🔹 RESPUESTAS DE REDIRECCIÓN PREDEFINIDAS
+# ==============================================
+REDIRECCIONES_PREDEFINIDAS = {
+    "internacional": {
+        "palabras": ["exportar", "exportación", "terceros países", "fuera de la ue",
+                     "australia", "nueva zelanda", "ee.uu", "eeuu", "china", "reino unido"],
+        "respuesta": """Buenos días,
+
+    Para consultas relacionadas con terceros países pueden ayudaros mis compañeras del área internacional. Lamentablemente, ellas aún no tienen acceso a la plataforma de Consultas Técnicas, pero puedes escribirle a la dirección de correo electrónico:
+    **stanpainternacional@stanpa.com**
+
+    Espero haber sido de utilidad y si necesita alguna cosa más, estamos a su disposición.  
+    Recibe un cordial saludo,  
+    Departamento Técnico."""
+    },
+    "sostenibilidad": {
+        "palabras": ["sostenibilidad", "medio ambiente", "huella", "ecodiseño", "envase sostenible", "packaging sostenible"],
+        "respuesta": """Buenos días,
+
+        En relación con tu consulta, lamentamos informarte que la responsable de Sostenibilidad, quien podría ayudarte, no tiene acceso a la nueva plataforma de consultas técnicas. No obstante, puedes dirigirte a ella a través del siguiente correo electrónico:
+        **lucia.jimenez@stanpa.com**
+
+        Espero haber sido de utilidad y si necesita alguna cosa más, estamos a su disposición.  
+        Recibe un cordial saludo,  
+        Departamento Técnico."""
+    }
+}
+
 # --- 5️⃣ Generar respuesta con GPT ---
 def responder_chatbot(pregunta, mostrar_contexto=False):
     from datetime import datetime
@@ -161,6 +190,11 @@ def responder_chatbot(pregunta, mostrar_contexto=False):
 
     pregunta_lower = pregunta.lower()
     pregunta_sin_acentos = quitar_acentos(pregunta_lower)
+
+    # --- 🧭 Detección automática de redirecciones fijas ---
+    for area, datos in REDIRECCIONES_PREDEFINIDAS.items():
+        if any(p in pregunta_sin_acentos for p in datos["palabras"]):
+            return datos["respuesta"]
 
     fragmentos = buscar_contexto(pregunta)
     if not fragmentos:
@@ -266,20 +300,6 @@ def responder_chatbot(pregunta, mostrar_contexto=False):
 
     if es_cosmetica_animal:
         frases_texto = "\n".join(["- " + " ".join(FRASES_POR_TEMA.get("cosmetica para animales", []))])
-    
-    # --- 🔎 Detección directa de consultas internacionales ---
-    palabras_internacional = [
-        "exportar", "exportación", "países fuera de la ue", "fuera de la unión europea",
-        "requisitos en otros países", "australia", "nueva zelanda", "ee.uu.", "eeuu", "china"
-    ]
-    if any(p in pregunta_sin_acentos for p in palabras_internacional):
-        return (
-            f"{saludo}\n\n"
-            "Esta consulta corresponde al ámbito internacional. "
-            "Le recomendamos contactar con el **Departamento Internacional** escribiendo a "
-            "**stanpainternacional@stanpa.com** para obtener información sobre requisitos de exportación y normativa fuera de la UE.\n\n"
-            f"{despedida}"
-    )
 
     prompt = f"""
     Eres un asistente experto en legislación cosmética, biocidas y productos regulados.
