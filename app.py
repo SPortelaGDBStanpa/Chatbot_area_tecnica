@@ -12,6 +12,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 from nltk.corpus import stopwords
 import streamlit as st
 import unicodedata
+import markdown
 
 def quitar_acentos(texto):
     """Elimina acentos y caracteres diacríticos de un texto."""
@@ -162,7 +163,7 @@ REDIRECCIONES_PREDEFINIDAS = {
         "respuesta": """Buenos días,
 
         En relación con tu consulta, lamentamos informarte que la responsable de Sostenibilidad, quien podría ayudarte, no tiene acceso a la nueva plataforma de consultas técnicas. No obstante, puedes dirigirte a ella a través del siguiente correo electrónico:
-        <a href="mailto:lucia.jimenez@stanpa.com" style="color:#0078D7; font-weight:bold; text-decoration:none;">stanpainternacional@stanpa.com</a>
+        <a href="mailto:lucia.jimenez@stanpa.com" style="color:#0078D7; font-weight:bold; text-decoration:none;">lucia.jimenez@stanpa.com</a>
 
         Espero haber sido de utilidad y si necesita alguna cosa más, estamos a su disposición.  
         Recibe un cordial saludo,  
@@ -378,8 +379,22 @@ if st.button("Enviar"):
     if pregunta.strip():
         with st.spinner("Analizando consulta..."):
             respuesta = responder_chatbot(pregunta)
-            respuesta = respuesta.replace("\n", "<br>")  # 👈 convierte saltos en HTML
-        st.markdown(f"<div style='font-size:16px; line-height:1.6;'>{respuesta}</div>", unsafe_allow_html=True)
+            html_respuesta = markdown.markdown(respuesta, extensions=["extra"])
+        st.markdown(
+            f"""
+            <div style='
+                font-size:16px; 
+                line-height:1.6; 
+                background-color:#f9f9f9; 
+                padding:20px; 
+                border-radius:10px; 
+                border:1px solid #ddd;
+            '>
+                {html_respuesta}
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
     else:
         st.warning("Por favor, escribe una consulta antes de enviar.")
 
