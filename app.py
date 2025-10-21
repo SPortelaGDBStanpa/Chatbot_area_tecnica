@@ -365,6 +365,25 @@ def responder_chatbot(pregunta, mostrar_contexto=False):
             frase_limpia = frase.strip("“”\"'")
             if frase_limpia in respuesta_limpia:
                 respuesta_limpia = respuesta_limpia.replace(frase_limpia, f"*{frase_limpia}*")
+    
+        # --- 🧹 Suavizar formulaciones categóricas ---
+    sustituciones = {
+        "es fundamental que": "es recomendable que",
+        "es fundamental incluir": "es aconsejable incluir",
+        "debe incluirse": "se recomienda incluir",
+        "debe figurar": "conviene que figure",
+        "debe aparecer": "se aconseja que aparezca",
+        "es obligatorio": "es necesario según el contexto normativo",
+        "es necesario que": "es recomendable que",
+        "es importante que": "es recomendable que",
+    }
+
+    texto_ajustado = respuesta_limpia
+    for original, reemplazo in sustituciones.items():
+        texto_ajustado = texto_ajustado.replace(original, reemplazo)
+        texto_ajustado = texto_ajustado.replace(original.capitalize(), reemplazo.capitalize())
+
+    respuesta_limpia = texto_ajustado
 
     return respuesta_limpia
 
