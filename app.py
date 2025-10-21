@@ -400,47 +400,45 @@ def responder_chatbot(pregunta, mostrar_contexto=False):
 # ==============================================
 # 🖥️ INTERFAZ STREAMLIT (Versión moderna)
 # ==============================================
-st.set_page_config(page_title="Chatbot Regulatorio Interno", page_icon="💬", layout="centered")
+# ==============================================
+# 🖥️ INTERFAZ STREAMLIT (versión moderna tipo chat)
+# ==============================================
+st.set_page_config(
+    page_title="Chatbot Regulatorio Interno",
+    page_icon="💬",
+    layout="centered"
+)
 
-# --- Estilos personalizados ---
+# --- Estilos modernos ---
 st.markdown("""
     <style>
     body {
         font-family: "Segoe UI", sans-serif;
-        background-color: #f9fafc;
+        background-color: #f7f9fb;
     }
     .main {
         background-color: #ffffff;
-        padding: 2rem;
+        padding: 2rem 3rem;
         border-radius: 1rem;
-        box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.05);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
     }
-    textarea {
-        border-radius: 0.8rem !important;
-        border: 1px solid #d0d4da !important;
-        font-size: 16px !important;
-        line-height: 1.5 !important;
-    }
-    .response-card {
-        background-color: #fdfdfd;
+    .chat-response {
+        background-color: #ffffff;
         border: 1px solid #e0e4e8;
         border-radius: 0.8rem;
         padding: 1.2rem 1.5rem;
         box-shadow: 0 2px 10px rgba(0,0,0,0.04);
         margin-top: 1rem;
         white-space: pre-wrap;
+        line-height: 1.6;
     }
-    .stButton>button {
-        width: 100%;
-        border-radius: 0.6rem;
-        background-color: #0078d7;
-        color: white;
-        font-weight: 600;
-        font-size: 16px;
-        height: 3rem;
-    }
-    .stButton>button:hover {
-        background-color: #005fa3;
+    .chat-question {
+        background-color: #e9f3ff;
+        border-radius: 0.8rem;
+        padding: 0.8rem 1rem;
+        margin-top: 1rem;
+        font-weight: 500;
+        color: #003366;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -450,33 +448,28 @@ st.markdown("<h1 style='text-align:center;'>💬 Chatbot Regulatorio Interno</h1
 st.markdown("<p style='text-align:center;color:gray;'>Consultas sobre normativa cosmética, biocidas y productos regulados</p>", unsafe_allow_html=True)
 st.markdown("<hr>", unsafe_allow_html=True)
 
-# --- Entrada del usuario ---
-pregunta = st.text_area("🧴 Escribe tu consulta:", key="input_pregunta", height=150, placeholder="Ejemplo: ¿Qué requisitos aplican al etiquetado de productos con vitamina A?")
+# --- Inicializar historial de conversación ---
+if "historial" not in st.session_state:
+    st.session_state.historial = []
 
-# --- Control con Enter ---
-enviar = st.button("Enviar")
-if not enviar:
-    # Detectar "Enter" (sin Shift) como envío rápido
-    st.session_state["enter_pressed"] = st.text_input(
-        label="",
-        key="hidden_input",
-        label_visibility="collapsed",
-        placeholder="",
-        on_change=lambda: st.session_state.update({"enviar": True}),
-    )
-
-if enviar or st.session_state.get("enviar", False):
-    if pregunta.strip():
-        with st.spinner("Analizando consulta..."):
-            respuesta = responder_chatbot(pregunta)
-            html_respuesta = markdown.markdown(respuesta, extensions=["extra"])
-        st.markdown(
-            f"<div class='response-card'>{html_respuesta}</div>",
-            unsafe_allow_html=True
-        )
-        st.session_state["enviar"] = False  # reset envío
+# --- Mostrar conversación previa ---
+for entrada in st.session_state.historial:
+    if entrada["role"] == "user":
+        st.markdown(f"<div class='chat-question'>🧴 <strong>Tú:</strong> {entrada['content']}</div>", unsafe_allow_html=True)
     else:
-        st.warning("Por favor, escribe una consulta antes de enviar.")
+        st.markdown(f"<div class='chat-response'>{entrada['content']}</div>", unsafe_allow_html=True)
+
+# --- Entrada tipo chat (Enter → enviar, Shift+Enter → salto de línea) ---
+pregunta = st.chat_input("Escribe tu consulta y pulsa Enter para enviar...")
+
+if pregunta:
+    # Mostrar pregunta del usuario
+    st.session_state.historial.append({"role": "user", "content": pregunta})
+    with st.spinner("Analizando consulta..."):
+        respuesta = responder_chatbot(pregunta)
+        html_respuesta = markdown.markdown(respuesta, extensions=["extra"])
+    st.session_state.historial.append({"role": "assistant", "content": html_respuesta})
+    st.rerun()
 
 st.markdown("<hr>", unsafe_allow_html=True)
 st.caption("🧠 Basado en el histórico de consultas internas y el modelo GPT-4o de OpenAI.")
