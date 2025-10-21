@@ -150,19 +150,19 @@ REDIRECCIONES_PREDEFINIDAS = {
                      "australia", "nueva zelanda", "ee.uu", "eeuu", "china", "reino unido"],
         "respuesta": """Buenos días,
 
-    Para consultas relacionadas con terceros países pueden ayudaros mis compañeras del área internacional. Lamentablemente, ellas aún no tienen acceso a la plataforma de Consultas Técnicas, pero puedes escribirle a la dirección de correo electrónico:
-    <a href="mailto:stanpainternacional@stanpa.com" style="color:#0078D7; font-weight:bold; text-decoration:none;">stanpainternacional@stanpa.com</a>
+        Para consultas relacionadas con terceros países pueden ayudaros mis compañeras del área internacional. Lamentablemente, ellas aún no tienen acceso a la plataforma de Consultas Técnicas, pero puedes escribirle a la dirección de correo electrónico:
+        <a href="mailto:stanpainternacional@stanpa.com" style="color:#0078D7; font-weight:bold; text-decoration:none;">stanpainternacional@stanpa.com</a>
 
-    Espero haber sido de utilidad y si necesita alguna cosa más, estamos a su disposición.  
-    Recibe un cordial saludo,  
-    Departamento Técnico."""
+        Espero haber sido de utilidad y si necesita alguna cosa más, estamos a su disposición.  
+        Recibe un cordial saludo,  
+        Departamento Técnico."""
     },
     "sostenibilidad": {
         "palabras": ["sostenibilidad", "medio ambiente", "huella", "ecodiseño", "envase sostenible", "packaging sostenible"],
         "respuesta": """Buenos días,
 
         En relación con tu consulta, lamentamos informarte que la responsable de Sostenibilidad, quien podría ayudarte, no tiene acceso a la nueva plataforma de consultas técnicas. No obstante, puedes dirigirte a ella a través del siguiente correo electrónico:
-        **lucia.jimenez@stanpa.com**
+        <a href="mailto:lucia.jimenez@stanpa.com" style="color:#0078D7; font-weight:bold; text-decoration:none;">stanpainternacional@stanpa.com</a>
 
         Espero haber sido de utilidad y si necesita alguna cosa más, estamos a su disposición.  
         Recibe un cordial saludo,  
