@@ -187,8 +187,8 @@ pero puedes escribirles a la dirección de correo electrónico:<br>
 <a href="mailto:stanpainternacional@stanpa.com" style="color:#0078D7; font-weight:bold; text-decoration:none;">
 stanpainternacional@stanpa.com</a><br><br>
 Espero haber sido de utilidad y si necesita alguna cosa más, estamos a su disposición.<br>
-<b>Reciba un cordial saludo,</b><br>
-<i>Departamento Técnico</i>.
+Reciba un cordial saludo,<br>
+Departamento Técnico.
 """
     },
     "sostenibilidad": {
@@ -204,8 +204,8 @@ No obstante, puedes dirigirte a ella a través del siguiente correo electrónico
 <a href="mailto:lucia.jimenez@stanpa.com" style="color:#0078D7; font-weight:bold; text-decoration:none;">
 lucia.jimenez@stanpa.com</a><br><br>
 Espero haber sido de utilidad y si necesita alguna cosa más, estamos a su disposición.<br>
-<b>Reciba un cordial saludo,</b><br>
-<i>Departamento Técnico</i>.
+Reciba un cordial saludo,<br>
+Departamento Técnico.
 """
     }
 }
