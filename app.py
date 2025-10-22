@@ -170,9 +170,6 @@ FRASES_POR_TEMA = {
 # ==============================================
 # 🔹 RESPUESTAS DE REDIRECCIÓN PREDEFINIDAS
 # ==============================================
-# ==============================================
-# 🔹 RESPUESTAS DE REDIRECCIÓN PREDEFINIDAS (corregidas)
-# ==============================================
 REDIRECCIONES_PREDEFINIDAS = {
     "internacional": {
         "palabras": [
@@ -262,14 +259,18 @@ def responder_chatbot(pregunta, mostrar_contexto=False):
     
     # --- 🧠 Detección avanzada para cosmética animal ---
     palabras_clave_animales = [
-        "cosmetica animal", "cosmetica para animales", "cosmeticos animales", "cosmeticos destinados a animales",
-        "productos cosmeticos destinados a animales", "productos destinados a animales",
-        "fabricar cosmeticos para animales", "fabricar productos cosmeticos destinados a animales",
-        "fabricación cosmetica para animales", "cosmetica veterinaria",
-        "higiene animal", "cuidado animal", "cosmetica para mascotas", "productos para mascotas"
+    "cosmetica animal", "cosmetica para animales", "cosmeticos animales",
+    "productos cosmeticos destinados a animales", "productos destinados a animales",
+    "fabricar cosmeticos para animales", "fabricar productos cosmeticos destinados a animales",
+    "fabricacion cosmetica para animales", "cosmetica veterinaria",
+    "higiene animal", "cuidado animal", "cosmetica para mascotas", "productos para mascotas"
     ]
 
     es_cosmetica_animal = any(p in pregunta_sin_acentos for p in palabras_clave_animales)
+
+    # ✅ Arreglado: todas las palabras sin tildes
+    if any(p in pregunta_sin_acentos for p in ["animal", "animales"]) and any(k in pregunta_sin_acentos for k in ["fabricacion", "fabricar", "declaracion responsable", "registro"]):
+        es_cosmetica_animal = True
 
     # Si hay mención de animales + fabricación o declaración -> forzar cosmética animal
     if any(p in pregunta_sin_acentos for p in ["animal", "animales"]) and any(k in pregunta_sin_acentos for k in ["fabricación", "fabricar", "declaración responsable", "registro"]):
