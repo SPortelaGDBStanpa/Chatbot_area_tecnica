@@ -58,7 +58,6 @@ def extraer_redireccion(fragmentos):
             if "@" in frag:
                 return f"{frag.strip()} (Se indica una dirección de correo para contacto directo)."
 
-            # Si no encuentra nada específico, devuelve el fragmento original
             return frag.strip()
 
     return None
@@ -67,25 +66,16 @@ def extraer_redireccion(fragmentos):
 # 1️⃣ CONFIGURACIÓN INICIAL
 # ==============================================
 
-# Usa tu clave de OpenAI (debe estar guardada en una variable de entorno)
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-
-# Descargar stopwords si no están instaladas
 nltk.download("stopwords", quiet=True)
 stop_words = stopwords.words("spanish")
 
-# --- 1️⃣ Cargar el dataset ---
 ruta_excel = "conversaciones_revisando.xlsx"
 df = pd.read_excel(ruta_excel)
-
-# Normalizar nombres
 df.columns = df.columns.str.strip().str.lower()
 
-# Tomar solo las consultas y respuestas
 consultas = df[df["role"].str.lower() == "user"]["content"].tolist()
 respuestas = df[df["role"].str.lower() == "assistant"]["content"].tolist()
-
-# Asegurar que haya pares del mismo tamaño
 pares = list(zip(consultas, respuestas))
 
 # ==============================================
@@ -101,11 +91,7 @@ except FileNotFoundError:
 # ==============================================
 # 4️⃣ Buscar contexto relevante con embeddings
 # ==============================================
-def buscar_contexto(pregunta, top_k=5, umbral_similitud=0.78):
-    """
-    Busca los fragmentos de respuesta más relevantes según similitud semántica.
-    Aplica un umbral de corte para evitar recuperar texto solo vagamente relacionado.
-    """
+def buscar_contexto(pregunta, top_k=5, umbral_similitud=0.65):
     pregunta_sin_acentos = quitar_acentos(pregunta.lower())
 
     emb_pregunta = client.embeddings.create(
@@ -115,23 +101,22 @@ def buscar_contexto(pregunta, top_k=5, umbral_similitud=0.78):
 
     similitudes = cosine_similarity([emb_pregunta], emb_consultas)[0]
 
-    # Filtrar por umbral mínimo de similitud
     indices_validos = [i for i, s in enumerate(similitudes) if s >= umbral_similitud]
     if not indices_validos:
-        # Si no hay coincidencias suficientemente fuertes, devolvemos las mejores dos
         indices_validos = similitudes.argsort()[-2:][::-1]
 
-    # Ordenar los seleccionados por similitud descendente
     indices_ordenados = sorted(indices_validos, key=lambda i: similitudes[i], reverse=True)[:top_k]
     fragmentos = [pares[i][1] for i in indices_ordenados]
 
-    # Refinar: evitar fragmentos que contengan "uñas", "depilación", "perfume", etc., si la pregunta no lo menciona
     temas_no_relevantes = ["uñas", "depilación", "perfume", "peluquería", "barniz"]
     if not any(t in pregunta_sin_acentos for t in temas_no_relevantes):
         fragmentos = [f for f in fragmentos if not any(t in f.lower() for t in temas_no_relevantes)]
 
     return fragmentos   
 
+# ==============================================
+# FRASES POR TEMA
+# ==============================================
 FRASES_POR_TEMA = {
     "cosmetico": [
         "“Un producto cosmético, según el Reglamento (CE) nº 1223/2009, es toda sustancia o mezcla destinada a ser puesta en contacto con las partes superficiales del cuerpo humano (epidermis, sistema piloso y capilar, uñas, labios, órganos genitales externos) o con los dientes y mucosas bucales, con el fin exclusivo o principal de limpiarlos, perfumarlos, modificar su aspecto, protegerlos, mantenerlos en buen estado o corregir los olores corporales.”"
@@ -168,7 +153,7 @@ FRASES_POR_TEMA = {
 }
 
 # ==============================================
-# 🔹 RESPUESTAS DE REDIRECCIÓN PREDEFINIDAS
+# RESPUESTAS DE REDIRECCIÓN PREDEFINIDAS
 # ==============================================
 REDIRECCIONES_PREDEFINIDAS = {
     "internacional": {
@@ -207,17 +192,15 @@ Departamento Técnico.
     }
 }
 
-# --- 5️⃣ Generar respuesta con GPT ---
+# ==============================================
+# 5️⃣ FUNCIÓN PRINCIPAL
+# ==============================================
 def responder_chatbot(pregunta, mostrar_contexto=False):
     from datetime import datetime
-
-    # --- 🕒 Determinar saludo según hora ---
     hora = datetime.now().hour
     saludo = "Buenos días," if hora < 12 else "Buenas tardes,"
-
-    # --- 🧾 Despedida fija ---
     despedida = (
-        "Espero haber sido de utilidad y si necesita alguna cosa más, estamos a su disposición.<br><br>"
+        "<br><br>Espero haber sido de utilidad y si necesita alguna cosa más, estamos a su disposición.<br><br>"
         "Reciba un cordial saludo,<br>"
         "Departamento Técnico."
     )
@@ -225,157 +208,50 @@ def responder_chatbot(pregunta, mostrar_contexto=False):
     pregunta_lower = pregunta.lower()
     pregunta_sin_acentos = quitar_acentos(pregunta_lower)
 
-    # --- 🧭 Detección automática de redirecciones fijas ---
+    # 🔹 Redirecciones fijas
     for area, datos in REDIRECCIONES_PREDEFINIDAS.items():
         if any(p in pregunta_sin_acentos for p in datos["palabras"]):
             return datos["respuesta"]
 
-    # --- 🔍 Detección prioritaria de temas normativos fijos ---
-    if "cosmetica para animales" in pregunta_sin_acentos or "cosmetica animal" in pregunta_sin_acentos:
-        fragmentos = []  # forzar respuesta por tema
-    else:
-        fragmentos = buscar_contexto(pregunta)
+    fragmentos = buscar_contexto(pregunta)
+    contexto = "\n\n".join(fragmentos) if fragmentos else ""
 
-    # ⚙️ Si no hay contexto relevante, continuar igualmente con detecciones temáticas
-    if not fragmentos:
-        fragmentos = []
+    # --- 🧠 Detección avanzada de temas normativos ---
+    # 🔹 Cosmética para animales
+    if any(p in pregunta_sin_acentos for p in ["cosmetica animal", "cosmetica para animales", "higiene animal", "cuidado animal", "cosmetica veterinaria", "productos para mascotas"]):
+        texto = FRASES_POR_TEMA["cosmetica para animales"][0].replace("\n", "<br>")
+        return f"{saludo}<br><br>{texto}<br><br>{despedida}"
 
-    contexto = "\n\n".join(fragmentos)
+    # 🔹 Vitamina A
+    if any(p in pregunta_sin_acentos for p in ["vitamina a", "retinol", "retinil"]):
+        texto = "<br><br>".join(FRASES_POR_TEMA["vitamina a"])
+        return f"{saludo}<br><br>{texto}<br><br>{despedida}"
 
-    # --- 🧩 Detección de redirección ---
-    if detectar_redireccion(fragmentos):
-        redireccion_texto = extraer_redireccion(fragmentos)
-        if redireccion_texto:
-            return f"{saludo}\n\n{redireccion_texto}\n\n{despedida}"
-        else:
-            return (
-                f"{saludo}\n\nLa consulta que plantea corresponde a otro ámbito de competencia. "
-                "Le recomendamos trasladarla al departamento o autoridad competente indicada en los procedimientos internos.\n\n"
-                f"{despedida}"
-            )
-
-    # --- Detectar tema ---
-    frases_relevantes = []
-    for tema, frases in FRASES_POR_TEMA.items():
-        if tema in pregunta_sin_acentos:
-            frases_relevantes.extend(frases)
-
-    # --- 🧠 Detección avanzada para cosmética animal ---
-    palabras_clave_animales = [
-        "cosmetica animal", "cosmetica para animales", "cosmeticos animales",
-        "productos cosmeticos destinados a animales", "productos destinados a animales",
-        "fabricar cosmeticos para animales", "fabricar productos cosmeticos destinados a animales",
-        "fabricacion cosmetica para animales", "cosmetica veterinaria",
-        "higiene animal", "cuidado animal", "cosmetica para mascotas", "productos para mascotas"
-    ]
-
-    es_cosmetica_animal = any(p in pregunta_sin_acentos for p in palabras_clave_animales)
-
-    if any(p in pregunta_sin_acentos for p in ["animal", "animales"]) and any(k in pregunta_sin_acentos for k in ["fabricacion", "fabricar", "declaracion responsable", "registro"]):
-        es_cosmetica_animal = True
-
-    if not es_cosmetica_animal:
-        try:
-            emb_pregunta = client.embeddings.create(
-                model="text-embedding-3-small",
-                input=pregunta
-            ).data[0].embedding
-
-            emb_animal = client.embeddings.create(
-                model="text-embedding-3-small",
-                input="cosmética para animales, productos cosméticos destinados a animales, higiene animal, fabricación de cosméticos para animales, cosmética veterinaria"
-            ).data[0].embedding
-
-            similitud = cosine_similarity([emb_pregunta], [emb_animal])[0][0]
-            if similitud > 0.75:
-                es_cosmetica_animal = True
-        except Exception as e:
-            print("⚠️ Error en detección semántica de cosmética animal:", e)
-
-    if es_cosmetica_animal:
-        # Obtener el texto original del tema desde FRASES_POR_TEMA
-        texto_animal = FRASES_POR_TEMA.get("cosmetica para animales", ["Texto no disponible."])[0]
-
-        # Convertirlo a formato HTML (cambia saltos de línea y negritas)
-        texto_animal_html = (
-            texto_animal
-            .replace("\n", "<br>")
-            .replace("**", "<b>").replace("<b><b>", "<b>").replace("</b></b>", "</b>")
-        )
-
-        respuesta_directa = f"""
-        {saludo}<br><br>
-        {texto_animal_html}<br><br>
-        {despedida}
-        """
-        return respuesta_directa
-
-
-
-    # --- 🧩 Filtrar la definición general cuando no aporta valor ---
-    palabras_clave_ingredientes = [
-        "formaldehido", "fenoxietanol", "metanol", "retinol", "plomo", "parabenos",
-        "filtros uv", "filtro uv", "perfume", "fragancia", "conservante", "colorante",
-        "nanomaterial", "biocida", "ingrediente", "sustancia", "compuesto", "aditivo", "alergeno"
-    ]
-
-    es_pregunta_de_ingrediente = any(p in pregunta_sin_acentos for p in palabras_clave_ingredientes)
-
-    if not es_pregunta_de_ingrediente:
-        try:
-            emb_pregunta = client.embeddings.create(
-                model="text-embedding-3-small",
-                input=pregunta
-            ).data[0].embedding
-
-            emb_ingrediente = client.embeddings.create(
-                model="text-embedding-3-small",
-                input="preguntas sobre ingredientes cosméticos, sustancias prohibidas, conservantes, colorantes o compuestos químicos usados en cosmética"
-            ).data[0].embedding
-
-            similitud_ing = cosine_similarity([emb_pregunta], [emb_ingrediente])[0][0]
-            if similitud_ing > 0.75:
-                es_pregunta_de_ingrediente = True
-        except Exception as e:
-            print("⚠️ Error en detección semántica de ingredientes:", e)
-
-    if es_pregunta_de_ingrediente and "cosmetico" in FRASES_POR_TEMA:
-        frases_relevantes = [f for f in frases_relevantes if f not in FRASES_POR_TEMA["cosmetico"]]
-
-    # --- Generar prompt final ---
-    frases_texto = "\n".join([f"- {f}" for f in frases_relevantes]) if frases_relevantes else ""
-    if es_cosmetica_animal:
-        frases_texto = "\n".join(["- " + " ".join(FRASES_POR_TEMA.get("cosmetica para animales", []))])
-
+    # --- Si no es tema fijo, usar GPT ---
     prompt = f"""
-    Eres un asistente experto en legislación cosmética, biocidas y productos regulados.
-    ...
-    """
+Eres un asistente experto en legislación cosmética, biocidas y productos regulados.
+Debes redactar una respuesta formal, precisa y técnica.
+Contexto normativo: {contexto}
+Pregunta: {pregunta}
+"""
     respuesta = client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[{"role": "user", "content": prompt}],
         temperature=0.1
     ).choices[0].message.content.strip()
 
-    # --- Ajustes finales ---
-    respuesta_limpia = respuesta.strip()
-    if not respuesta_limpia.lower().startswith(("buenos días", "buenas tardes", "buenas noches")):
-        respuesta_limpia = f"{saludo}\n\n{respuesta_limpia}"
-    if "departamento técnico" not in respuesta_limpia.lower():
-        respuesta_limpia = f"{respuesta_limpia}\n\n{despedida}"
+    if not respuesta.lower().startswith(("buenos días", "buenas tardes")):
+        respuesta = f"{saludo}<br><br>{respuesta}"
+    if "departamento técnico" not in respuesta.lower():
+        respuesta += f"<br><br>{despedida}"
 
-    return respuesta_limpia
+    return respuesta
 
 # ==============================================
-# 🖥️ INTERFAZ STREAMLIT (versión moderna tipo chat)
+# 🖥️ INTERFAZ STREAMLIT
 # ==============================================
-st.set_page_config(
-    page_title="Chatbot Regulatorio Interno",
-    page_icon="💬",
-    layout="centered"
-)
+st.set_page_config(page_title="Chatbot Regulatorio Interno", page_icon="💬", layout="centered")
 
-# --- Estilos modernos ---
 st.markdown("""
     <style>
     .chat-response {
@@ -392,29 +268,22 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# --- Cabecera ---
 st.markdown("<h1 style='text-align:center;'>💬 Chatbot Regulatorio Interno</h1>", unsafe_allow_html=True)
 st.markdown("<p style='text-align:center;color:gray;'>Consultas sobre normativa cosmética, biocidas y productos regulados</p>", unsafe_allow_html=True)
 st.markdown("<hr>", unsafe_allow_html=True)
 
-# --- Inicializar historial de conversación ---
 if "historial" not in st.session_state:
     st.session_state.historial = []
 
-# --- Mostrar conversación previa ---
-# --- Mostrar conversación previa ---
 for entrada in st.session_state.historial:
     if entrada["role"] == "user":
         st.markdown(f"<div class='chat-question'>🧴 <strong>Tú:</strong> {entrada['content']}</div>", unsafe_allow_html=True)
     else:
-        # ✅ Renderiza correctamente HTML y Markdown dentro del contenedor blanco
         st.markdown(f"<div class='chat-response'>{entrada['content']}</div>", unsafe_allow_html=True)
 
-# --- Entrada tipo chat (Enter → enviar, Shift+Enter → salto de línea) ---
 pregunta = st.chat_input("Escribe tu consulta y pulsa Enter para enviar...")
 
 if pregunta:
-    # Mostrar pregunta del usuario
     st.session_state.historial.append({"role": "user", "content": pregunta})
     with st.spinner("Analizando consulta..."):
         respuesta = responder_chatbot(pregunta)
