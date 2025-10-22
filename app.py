@@ -170,29 +170,43 @@ FRASES_POR_TEMA = {
 # ==============================================
 # 🔹 RESPUESTAS DE REDIRECCIÓN PREDEFINIDAS
 # ==============================================
+# ==============================================
+# 🔹 RESPUESTAS DE REDIRECCIÓN PREDEFINIDAS (corregidas)
+# ==============================================
 REDIRECCIONES_PREDEFINIDAS = {
     "internacional": {
-        "palabras": ["exportar", "exportación", "terceros países", "fuera de la ue",
-                     "australia", "nueva zelanda", "ee.uu", "eeuu", "china", "reino unido"],
-        "respuesta": """Buenos días,
-
-        Para consultas relacionadas con terceros países pueden ayudaros mis compañeras del área internacional. Lamentablemente, ellas aún no tienen acceso a la plataforma de Consultas Técnicas, pero puedes escribirle a la dirección de correo electrónico:
-        <a href="mailto:stanpainternacional@stanpa.com" style="color:#0078D7; font-weight:bold; text-decoration:none;">stanpainternacional@stanpa.com</a>
-
-        Espero haber sido de utilidad y si necesita alguna cosa más, estamos a su disposición.  
-        Recibe un cordial saludo,  
-        Departamento Técnico."""
+        "palabras": [
+            "exportar", "exportación", "terceros países", "fuera de la ue",
+            "australia", "nueva zelanda", "ee.uu", "eeuu", "china", "reino unido"
+        ],
+        "respuesta": """
+<b>Buenos días,</b><br><br>
+Para consultas relacionadas con terceros países pueden ayudaros mis compañeras del área internacional. 
+Lamentablemente, ellas aún no tienen acceso a la plataforma de Consultas Técnicas, 
+pero puedes escribirles a la dirección de correo electrónico:<br>
+<a href="mailto:stanpainternacional@stanpa.com" style="color:#0078D7; font-weight:bold; text-decoration:none;">
+stanpainternacional@stanpa.com</a><br><br>
+Espero haber sido de utilidad y si necesita alguna cosa más, estamos a su disposición.<br>
+<b>Reciba un cordial saludo,</b><br>
+<i>Departamento Técnico</i>.
+"""
     },
     "sostenibilidad": {
-        "palabras": ["sostenibilidad", "medio ambiente", "huella", "ecodiseño", "envase sostenible", "packaging sostenible"],
-        "respuesta": """Buenos días,
-
-        En relación con tu consulta, lamentamos informarte que la responsable de Sostenibilidad, quien podría ayudarte, no tiene acceso a la nueva plataforma de consultas técnicas. No obstante, puedes dirigirte a ella a través del siguiente correo electrónico:
-        <a href="mailto:lucia.jimenez@stanpa.com" style="color:#0078D7; font-weight:bold; text-decoration:none;">lucia.jimenez@stanpa.com</a>
-
-        Espero haber sido de utilidad y si necesita alguna cosa más, estamos a su disposición.  
-        Recibe un cordial saludo,  
-        Departamento Técnico."""
+        "palabras": [
+            "sostenibilidad", "medio ambiente", "huella", "ecodiseño", 
+            "envase sostenible", "packaging sostenible"
+        ],
+        "respuesta": """
+<b>Buenos días,</b><br><br>
+En relación con tu consulta, lamentamos informarte que la responsable de Sostenibilidad, 
+quien podría ayudarte, no tiene acceso a la nueva plataforma de consultas técnicas. 
+No obstante, puedes dirigirte a ella a través del siguiente correo electrónico:<br>
+<a href="mailto:lucia.jimenez@stanpa.com" style="color:#0078D7; font-weight:bold; text-decoration:none;">
+lucia.jimenez@stanpa.com</a><br><br>
+Espero haber sido de utilidad y si necesita alguna cosa más, estamos a su disposición.<br>
+<b>Reciba un cordial saludo,</b><br>
+<i>Departamento Técnico</i>.
+"""
     }
 }
 
