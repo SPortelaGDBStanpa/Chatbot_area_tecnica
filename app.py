@@ -102,16 +102,35 @@ except FileNotFoundError:
 # ==============================================
 # 4️⃣ Buscar contexto relevante con embeddings
 # ==============================================
-def buscar_contexto(pregunta, top_k=5):
-    """Busca las respuestas más similares semánticamente."""
+def buscar_contexto(pregunta, top_k=5, umbral_similitud=0.78):
+    """
+    Busca los fragmentos de respuesta más relevantes según similitud semántica.
+    Aplica un umbral de corte para evitar recuperar texto solo vagamente relacionado.
+    """
     pregunta_sin_acentos = quitar_acentos(pregunta.lower())
+
     emb_pregunta = client.embeddings.create(
         model="text-embedding-3-small",
         input=pregunta_sin_acentos
     ).data[0].embedding
+
     similitudes = cosine_similarity([emb_pregunta], emb_consultas)[0]
-    indices = similitudes.argsort()[-top_k:][::-1]
-    fragmentos = [pares[i][1] for i in indices]
+
+    # Filtrar por umbral mínimo de similitud
+    indices_validos = [i for i, s in enumerate(similitudes) if s >= umbral_similitud]
+    if not indices_validos:
+        # Si no hay coincidencias suficientemente fuertes, devolvemos las mejores dos
+        indices_validos = similitudes.argsort()[-2:][::-1]
+
+    # Ordenar los seleccionados por similitud descendente
+    indices_ordenados = sorted(indices_validos, key=lambda i: similitudes[i], reverse=True)[:top_k]
+    fragmentos = [pares[i][1] for i in indices_ordenados]
+
+    # Refinar: evitar fragmentos que contengan "uñas", "depilación", "perfume", etc., si la pregunta no lo menciona
+    temas_no_relevantes = ["uñas", "depilación", "perfume", "peluquería", "barniz"]
+    if not any(t in pregunta_sin_acentos for t in temas_no_relevantes):
+        fragmentos = [f for f in fragmentos if not any(t in f.lower() for t in temas_no_relevantes)]
+
     return fragmentos
 
 FRASES_POR_TEMA = {
@@ -394,12 +413,6 @@ def responder_chatbot(pregunta, mostrar_contexto=False):
 
     return respuesta_limpia
 
-# ==============================================
-# 5️⃣ INTERFAZ STREAMLIT
-# ==============================================
-# ==============================================
-# 🖥️ INTERFAZ STREAMLIT (Versión moderna)
-# ==============================================
 # ==============================================
 # 🖥️ INTERFAZ STREAMLIT (versión moderna tipo chat)
 # ==============================================
