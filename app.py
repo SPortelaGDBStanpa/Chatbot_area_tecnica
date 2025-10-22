@@ -295,36 +295,27 @@ def responder_chatbot(pregunta, mostrar_contexto=False):
     if es_cosmetica_animal:
         respuesta_directa = f"""
         {saludo}<br><br>
-
-        Los productos destinados a la higiene o cuidado de animales no se consideran cosméticos y quedan fuera del ámbito de aplicación del Reglamento 1223/2009.
-
-        En el contexto español, estos productos fueron considerados inicialmente como productos zoosanitarios. Tras la publicación del Real Decreto 867/2020 dejaron de estar incluidos en dicho marco, aunque una sentencia del Tribunal Supremo en 2023 anuló parcialmente ese Real Decreto, devolviendo temporalmente a los productos cosméticos para animales la consideración de zoosanitarios.
-
-        Finalmente, con la **Ley 1/2025, de 1 de abril**, que modifica la **Ley 8/2003 de sanidad animal**, se elimina la obligatoriedad de registro de los productos de higiene, cuidado y manejo de animales (HCM) y del material y utillaje zoosanitario (MUZ). En consecuencia, estos productos quedan fuera del ámbito competencial del Ministerio de Agricultura y Pesca.
-
-        Ante esta situación, el pasado mes de junio nos pusimos en contacto con **ASEMAZ**, quienes nos informaron de lo siguiente:  
-        Con la publicación de la Ley 1/2025, determinados productos zoosanitarios destinados a higiene, cuidado y manejo de los animales ya no tienen que ser notificados por el titular de los mismos para su comercialización.
-
-        Ahora bien, decimos “determinados” dado que dependiendo del “claim” reivindicado por el producto (**biocidas**), tendrán las siguientes obligaciones:
-
-        **Registro nacional:**
-        - Si se trata de un zoosanitario para uso en entorno ganadero (insecticida, larvicida, desinfectante, etc.), deberá solicitarse su registro ante el **MAPA** como plaguicida, con los correspondientes ensayos según la eficacia que se quiera defender.  
-        Más información: [Registro de productos zoosanitarios - MAPA](https://www.mapa.gob.es/es/ganaderia/temas/sanidad-animal-higiene-ganadera/Higiene-de-la-produccion-primaria-ganadera/registro-de-productos-zoosanitarios/)
-        - Si se trata de un plaguicida no agrícola (desinfectante de uso en la industria alimentaria o uso ambiental, rodenticida, etc.), deberá solicitarse su registro ante **Sanidad** como plaguicida no agrícola.  
-        Más información: [Registro nacional de plaguicidas no agrícolas - Ministerio de Sanidad](https://www.sanidad.gob.es/areas/sanidadAmbiental/biocidas/registro/regNacional/requisitos_nacional.htm)
-        - Si se trata de un **biocida tipo 3** (higiene veterinaria con función biocida), es obligatoria la notificación a Sanidad de conformidad con la **Disposición Transitoria Segunda del RD 1054/2002** (no requiere ensayos de eficacia).  
-        Más información: [Notificación DT2 - Ministerio de Sanidad](https://www.sanidad.gob.es/areas/sanidadAmbiental/biocidas/registro/regPlaguicidas/dt2notificanuevo.htm)
-
-        En todo caso, para los casos anteriores, una vez que las sustancias activas que formen parte del producto (sustancias biocidas) cuenten con Reglamento de Ejecución para los tipos de productos biocidas que se quieren defender, esos productos deberán solicitar su registro por procedimiento europeo, de conformidad con las exigencias del **Reglamento (UE) 528/2012**.
-
-        Además, los productos que se deseen comercializar, estén afectados o no por lo indicado anteriormente, son productos químicos peligrosos (mezclas o sustancias) y quedarán afectados por la normativa de clasificación y etiquetado de mezclas y sustancias químicas.  
-        Por tanto, deberán estar debidamente **etiquetados**, contar con **ficha de datos de seguridad (FDS)** y ser **notificados a toxicología mediante un expediente PCN**.
-
-        Tal y como recomiendan desde ASEMAZ, lo más conveniente es **poneros en contacto con la autoridad competente correspondiente** para que os puedan dar información detallada.
-
-        <br><br>{despedida}
+        Los productos destinados a la higiene o cuidado de animales no se consideran cosméticos y quedan fuera del ámbito de aplicación del Reglamento 1223/2009.<br><br>
+        En el contexto español, estos productos fueron considerados inicialmente como productos zoosanitarios. Tras la publicación del Real Decreto 867/2020 dejaron de estar incluidos en dicho marco, aunque una sentencia del Tribunal Supremo en 2023 anuló parcialmente ese Real Decreto, devolviendo temporalmente a los productos cosméticos para animales la consideración de zoosanitarios.<br><br>
+        Finalmente, con la <b>Ley 1/2025, de 1 de abril</b>, que modifica la <b>Ley 8/2003 de sanidad animal</b>, se elimina la obligatoriedad de registro de los productos de higiene, cuidado y manejo de animales (HCM) y del material y utillaje zoosanitario (MUZ). En consecuencia, estos productos quedan fuera del ámbito competencial del Ministerio de Agricultura y Pesca.<br><br>
+        Ante esta situación, el pasado mes de junio nos pusimos en contacto con <b>ASEMAZ</b>, quienes nos informaron de lo siguiente:<br>
+        Con la publicación de la Ley 1/2025, determinados productos zoosanitarios destinados a higiene, cuidado y manejo de los animales ya no tienen que ser notificados por el titular de los mismos para su comercialización.<br><br>
+        Ahora bien, decimos “determinados” dado que dependiendo del “claim” reivindicado por el producto (<b>biocidas</b>), tendrán las siguientes obligaciones:<br><br>
+        <b>Registro nacional:</b><br>
+        - Si se trata de un zoosanitario para uso en entorno ganadero (insecticida, larvicida, desinfectante, etc.), deberá solicitarse su registro ante el <b>MAPA</b> como plaguicida, con los correspondientes ensayos según la eficacia que se quiera defender.<br>
+        Más información: <a href="https://www.mapa.gob.es/es/ganaderia/temas/sanidad-animal-higiene-ganadera/Higiene-de-la-produccion-primaria-ganadera/registro-de-productos-zoosanitarios/" target="_blank">Registro de productos zoosanitarios - MAPA</a><br>
+        - Si se trata de un plaguicida no agrícola (desinfectante de uso en la industria alimentaria o uso ambiental, rodenticida, etc.), deberá solicitarse su registro ante <b>Sanidad</b> como plaguicida no agrícola.<br>
+        Más información: <a href="https://www.sanidad.gob.es/areas/sanidadAmbiental/biocidas/registro/regNacional/requisitos_nacional.htm" target="_blank">Registro nacional de plaguicidas no agrícolas - Ministerio de Sanidad</a><br>
+        - Si se trata de un <b>biocida tipo 3</b> (higiene veterinaria con función biocida), es obligatoria la notificación a Sanidad de conformidad con la <b>Disposición Transitoria Segunda del RD 1054/2002</b> (no requiere ensayos de eficacia).<br>
+        Más información: <a href="https://www.sanidad.gob.es/areas/sanidadAmbiental/biocidas/registro/regPlaguicidas/dt2notificanuevo.htm" target="_blank">Notificación DT2 - Ministerio de Sanidad</a><br><br>
+        En todo caso, para los casos anteriores, una vez que las sustancias activas que formen parte del producto (sustancias biocidas) cuenten con Reglamento de Ejecución para los tipos de productos biocidas que se quieren defender, esos productos deberán solicitar su registro por procedimiento europeo, de conformidad con las exigencias del <b>Reglamento (UE) 528/2012</b>.<br><br>
+        Además, los productos que se deseen comercializar, estén afectados o no por lo indicado anteriormente, son productos químicos peligrosos (mezclas o sustancias) y quedarán afectados por la normativa de clasificación y etiquetado de mezclas y sustancias químicas.<br>
+        Por tanto, deberán estar debidamente <b>etiquetados</b>, contar con <b>ficha de datos de seguridad (FDS)</b> y ser <b>notificados a toxicología mediante un expediente PCN</b>.<br><br>
+        Tal y como recomiendan desde ASEMAZ, lo más conveniente es <b>poneros en contacto con la autoridad competente correspondiente</b> para que os puedan dar información detallada.<br><br>
+        {despedida}
         """
         return respuesta_directa
+
 
     # --- 🧩 Filtrar la definición general cuando no aporta valor ---
     palabras_clave_ingredientes = [
@@ -416,19 +407,13 @@ if "historial" not in st.session_state:
     st.session_state.historial = []
 
 # --- Mostrar conversación previa ---
+# --- Mostrar conversación previa ---
 for entrada in st.session_state.historial:
     if entrada["role"] == "user":
-        st.markdown(f"🧴 **Tú:** {entrada['content']}")
+        st.markdown(f"<div class='chat-question'>🧴 <strong>Tú:</strong> {entrada['content']}</div>", unsafe_allow_html=True)
     else:
-        # ✅ Muestra la respuesta en un contenedor visual, pero dejando a Streamlit procesar Markdown
-        st.markdown(
-            f"""
-<div class="chat-response" style="white-space:normal; line-height:1.7; font-size:16px;">
-{entrada['content']}
-</div>
-""",
-            unsafe_allow_html=False
-        )
+        # ✅ Renderiza correctamente HTML y Markdown dentro del contenedor blanco
+        st.markdown(f"<div class='chat-response'>{entrada['content']}</div>", unsafe_allow_html=True)
 
 # --- Entrada tipo chat (Enter → enviar, Shift+Enter → salto de línea) ---
 pregunta = st.chat_input("Escribe tu consulta y pulsa Enter para enviar...")
