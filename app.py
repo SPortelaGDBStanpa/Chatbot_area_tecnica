@@ -213,10 +213,7 @@ def responder_chatbot(pregunta, mostrar_contexto=False):
 
     # --- 🕒 Determinar saludo según hora ---
     hora = datetime.now().hour
-    if hora < 12:
-        saludo = "Buenos días,"
-    else:
-        saludo = "Buenas tardes,"
+    saludo = "Buenos días," if hora < 12 else "Buenas tardes,"
 
     # --- 🧾 Despedida fija ---
     despedida = (
@@ -233,9 +230,17 @@ def responder_chatbot(pregunta, mostrar_contexto=False):
         if any(p in pregunta_sin_acentos for p in datos["palabras"]):
             return datos["respuesta"]
 
-    fragmentos = buscar_contexto(pregunta)
+    # --- 🔍 Detección prioritaria de temas normativos fijos ---
+    if "cosmetica para animales" in pregunta_sin_acentos or "cosmetica animal" in pregunta_sin_acentos:
+        fragmentos = []  # forzar respuesta por tema
+    else:
+        fragmentos = buscar_contexto(pregunta)
+
+    # ⚙️ Si no hay contexto relevante, continuar igualmente con detecciones temáticas
     if not fragmentos:
-        return "No encontré información relevante en la base de datos. ¿Podrías reformular la pregunta?"
+        fragmentos = []
+
+    contexto = "\n\n".join(fragmentos)
 
     # --- 🧩 Detección de redirección ---
     if detectar_redireccion(fragmentos):
@@ -249,34 +254,26 @@ def responder_chatbot(pregunta, mostrar_contexto=False):
                 f"{despedida}"
             )
 
-    contexto = "\n\n".join(fragmentos)
-
     # --- Detectar tema ---
     frases_relevantes = []
     for tema, frases in FRASES_POR_TEMA.items():
         if tema in pregunta_sin_acentos:
             frases_relevantes.extend(frases)
-    
+
     # --- 🧠 Detección avanzada para cosmética animal ---
     palabras_clave_animales = [
-    "cosmetica animal", "cosmetica para animales", "cosmeticos animales",
-    "productos cosmeticos destinados a animales", "productos destinados a animales",
-    "fabricar cosmeticos para animales", "fabricar productos cosmeticos destinados a animales",
-    "fabricacion cosmetica para animales", "cosmetica veterinaria",
-    "higiene animal", "cuidado animal", "cosmetica para mascotas", "productos para mascotas"
+        "cosmetica animal", "cosmetica para animales", "cosmeticos animales",
+        "productos cosmeticos destinados a animales", "productos destinados a animales",
+        "fabricar cosmeticos para animales", "fabricar productos cosmeticos destinados a animales",
+        "fabricacion cosmetica para animales", "cosmetica veterinaria",
+        "higiene animal", "cuidado animal", "cosmetica para mascotas", "productos para mascotas"
     ]
 
     es_cosmetica_animal = any(p in pregunta_sin_acentos for p in palabras_clave_animales)
 
-    # ✅ Arreglado: todas las palabras sin tildes
     if any(p in pregunta_sin_acentos for p in ["animal", "animales"]) and any(k in pregunta_sin_acentos for k in ["fabricacion", "fabricar", "declaracion responsable", "registro"]):
         es_cosmetica_animal = True
 
-    # Si hay mención de animales + fabricación o declaración -> forzar cosmética animal
-    if any(p in pregunta_sin_acentos for p in ["animal", "animales"]) and any(k in pregunta_sin_acentos for k in ["fabricación", "fabricar", "declaración responsable", "registro"]):
-        es_cosmetica_animal = True
-
-    # Si no coincide por palabra, comprobar similitud semántica con embeddings
     if not es_cosmetica_animal:
         try:
             emb_pregunta = client.embeddings.create(
@@ -296,21 +293,26 @@ def responder_chatbot(pregunta, mostrar_contexto=False):
             print("⚠️ Error en detección semántica de cosmética animal:", e)
 
     if es_cosmetica_animal:
-        frases_relevantes.extend(FRASES_POR_TEMA.get("cosmetica para animales", []))
-    
-    # --- 🧩 Filtrar la definición general cuando no aporta valor ---
+    # 🔹 Forzar respuesta directa sin pasar por el modelo GPT
+        respuesta_directa = f"""
+        {saludo}
 
-    # Palabras clave comunes relacionadas con ingredientes o sustancias
+        {FRASES_POR_TEMA.get("cosmetica para animales", ["No hay texto disponible para este tema."])[0]}
+
+        {despedida}
+        """
+        return respuesta_directa
+
+
+    # --- 🧩 Filtrar la definición general cuando no aporta valor ---
     palabras_clave_ingredientes = [
-        "formaldehido", "fenoxietanol", "metanol", "retinol", "plomo", "parabenos", "filtros uv", "filtro uv", "perfume", "fragancia",
-        "conservante", "colorante", "nanomaterial", "biocida", "ingrediente", "sustancia", "compuesto", "aditivo", "alergeno"
+        "formaldehido", "fenoxietanol", "metanol", "retinol", "plomo", "parabenos",
+        "filtros uv", "filtro uv", "perfume", "fragancia", "conservante", "colorante",
+        "nanomaterial", "biocida", "ingrediente", "sustancia", "compuesto", "aditivo", "alergeno"
     ]
 
-    # Detección inicial por palabra
     es_pregunta_de_ingrediente = any(p in pregunta_sin_acentos for p in palabras_clave_ingredientes)
 
-
-    # Si no hay coincidencias claras, analizar similitud semántica
     if not es_pregunta_de_ingrediente:
         try:
             emb_pregunta = client.embeddings.create(
@@ -329,101 +331,31 @@ def responder_chatbot(pregunta, mostrar_contexto=False):
         except Exception as e:
             print("⚠️ Error en detección semántica de ingredientes:", e)
 
-    # Si la pregunta trata de ingredientes, eliminar la definición general del cosmético
     if es_pregunta_de_ingrediente and "cosmetico" in FRASES_POR_TEMA:
-        frases_relevantes = [
-            f for f in frases_relevantes
-            if f not in FRASES_POR_TEMA["cosmetico"]
-        ]
+        frases_relevantes = [f for f in frases_relevantes if f not in FRASES_POR_TEMA["cosmetico"]]
 
-    # Si el tema detectado es cosmética animal, unir todas las frases en una sola para asegurar que el bloque completo se incluye
+    # --- Generar prompt final ---
     frases_texto = "\n".join([f"- {f}" for f in frases_relevantes]) if frases_relevantes else ""
-
     if es_cosmetica_animal:
         frases_texto = "\n".join(["- " + " ".join(FRASES_POR_TEMA.get("cosmetica para animales", []))])
 
     prompt = f"""
     Eres un asistente experto en legislación cosmética, biocidas y productos regulados.
-
-    Debes redactar una respuesta **formal, precisa y actualizada**, en tono técnico.
-    Estructura la respuesta de la siguiente forma:
-
-    1️⃣ Comienza con una **afirmación clara y objetiva** sobre la situación normativa del tema preguntado.
-    2️⃣ Desarrolla a continuación una explicación completa con el contexto legal y técnico.
-    3️⃣ Finaliza con la despedida establecida.
-
-    La respuesta debe empezar con un saludo (“Buenos días,” / “Buenas tardes,”) y finalizar con:
-
-    "Espero haber sido de utilidad y si necesita alguna cosa más, estamos a su disposición.
-    Reciba un cordial saludo,
-    Departamento Técnico."
-
-    ⚖️ Instrucciones:
-    - No inventes ni reformules información.
-    - No incluyas recomendaciones ni valoraciones personales.
-    - **Debes incluir en la respuesta todas las frases normativas listadas a continuación, sin omitir ninguna parte, sin resumir ni reescribirlas.**
-    - Cada una de ellas debe aparecer *exactamente como está redactada* (sin comillas), en cursiva, dentro del texto final:
-    {frases_texto}
-    - **Mantén la estructura y el formato técnico** de la información (por ejemplo, listas con guiones, subtítulos en negrita como “Registro nacional”, saltos de línea, etc.).
-    - Si la información incluye secciones con guiones o subtítulos, reprodúcelas con formato Markdown igual al original.
-    - No transformes las listas en párrafos corridos.
-
-    - Inserta las frases donde encajen naturalmente en el desarrollo.
-    - El resto del texto debe complementar las frases con explicaciones objetivas y actuales.
-
-    ---
-    Contexto normativo (solo para ampliar datos coherentes con las frases anteriores):
-    {contexto}
-
-    ---
-    Pregunta:
-    {pregunta}
+    ...
     """
-    prompt += "\n\nRecuerda: conserva la estructura original (listas, títulos y saltos de línea) del texto normativo."
 
-    # --- 🔗 Llamada al modelo ---
     respuesta = client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[{"role": "user", "content": prompt}],
         temperature=0.1
     ).choices[0].message.content.strip()
 
-    # --- 🧩 Evitar duplicados ---
+    # --- Ajustes finales ---
     respuesta_limpia = respuesta.strip()
-
     if not respuesta_limpia.lower().startswith(("buenos días", "buenas tardes", "buenas noches")):
         respuesta_limpia = f"{saludo}\n\n{respuesta_limpia}"
-
-    despedida_normalizada = despedida.lower().replace("\n", " ").replace("  ", " ").strip()
-    respuesta_normalizada = respuesta_limpia.lower().replace("\n", " ").replace("  ", " ").strip()
-    if "departamento técnico" not in respuesta_normalizada:
+    if "departamento técnico" not in respuesta_limpia.lower():
         respuesta_limpia = f"{respuesta_limpia}\n\n{despedida}"
-
-    # --- ✨ Poner en cursiva las frases normativas incluidas ---
-    for tema, frases in FRASES_POR_TEMA.items():
-        for frase in frases:
-            frase_limpia = frase.strip("“”\"'")
-            if frase_limpia in respuesta_limpia:
-                respuesta_limpia = respuesta_limpia.replace(frase_limpia, f"*{frase_limpia}*")
-    
-        # --- 🧹 Suavizar formulaciones categóricas ---
-    sustituciones = {
-        "es fundamental que": "es recomendable que",
-        "es fundamental incluir": "es aconsejable incluir",
-        "debe incluirse": "se recomienda incluir",
-        "debe figurar": "conviene que figure",
-        "debe aparecer": "se aconseja que aparezca",
-        "es obligatorio": "es necesario según el contexto normativo",
-        "es necesario que": "es recomendable que",
-        "es importante que": "es recomendable que",
-    }
-
-    texto_ajustado = respuesta_limpia
-    for original, reemplazo in sustituciones.items():
-        texto_ajustado = texto_ajustado.replace(original, reemplazo)
-        texto_ajustado = texto_ajustado.replace(original.capitalize(), reemplazo.capitalize())
-
-    respuesta_limpia = texto_ajustado
 
     return respuesta_limpia
 
