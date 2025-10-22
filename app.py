@@ -217,8 +217,8 @@ def responder_chatbot(pregunta, mostrar_contexto=False):
 
     # --- 🧾 Despedida fija ---
     despedida = (
-        "Espero haber sido de utilidad y si necesita alguna cosa más, estamos a su disposición.\n"
-        "Reciba un cordial saludo,\n"
+        "Espero haber sido de utilidad y si necesita alguna cosa más, estamos a su disposición.<br><br>"
+        "Reciba un cordial saludo,<br><br>"
         "Departamento Técnico."
     )
 
