@@ -326,7 +326,6 @@ def responder_chatbot(pregunta, mostrar_contexto=False):
         """
         return respuesta_directa
 
-
     # --- 🧩 Filtrar la definición general cuando no aporta valor ---
     palabras_clave_ingredientes = [
         "formaldehido", "fenoxietanol", "metanol", "retinol", "plomo", "parabenos",
@@ -366,7 +365,6 @@ def responder_chatbot(pregunta, mostrar_contexto=False):
     Eres un asistente experto en legislación cosmética, biocidas y productos regulados.
     ...
     """
-
     respuesta = client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[{"role": "user", "content": prompt}],
@@ -420,9 +418,10 @@ if "historial" not in st.session_state:
 # --- Mostrar conversación previa ---
 for entrada in st.session_state.historial:
     if entrada["role"] == "user":
-        st.markdown(f"<div class='chat-question'>🧴 <strong>Tú:</strong> {entrada['content']}</div>", unsafe_allow_html=True)
+        st.markdown(f"🧴 **Tú:** {entrada['content']}")
     else:
-        st.markdown(f"<div class='chat-response'>{entrada['content']}</div>", unsafe_allow_html=True)
+        # Mostrar respuesta del asistente con formato Markdown real
+        st.markdown(entrada["content"], unsafe_allow_html=False)
 
 # --- Entrada tipo chat (Enter → enviar, Shift+Enter → salto de línea) ---
 pregunta = st.chat_input("Escribe tu consulta y pulsa Enter para enviar...")
