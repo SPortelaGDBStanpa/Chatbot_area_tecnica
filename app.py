@@ -294,7 +294,7 @@ def responder_chatbot(pregunta, mostrar_contexto=False):
 
     if es_cosmetica_animal:
         respuesta_directa = f"""
-        {saludo}
+        {saludo}<br><br>
 
         Los productos destinados a la higiene o cuidado de animales no se consideran cosméticos y quedan fuera del ámbito de aplicación del Reglamento 1223/2009.
 
@@ -322,7 +322,7 @@ def responder_chatbot(pregunta, mostrar_contexto=False):
 
         Tal y como recomiendan desde ASEMAZ, lo más conveniente es **poneros en contacto con la autoridad competente correspondiente** para que os puedan dar información detallada.
 
-        {despedida}
+        <br><br>{despedida}
         """
         return respuesta_directa
 
@@ -418,10 +418,9 @@ if "historial" not in st.session_state:
 # --- Mostrar conversación previa ---
 for entrada in st.session_state.historial:
     if entrada["role"] == "user":
-        st.markdown(f"🧴 **Tú:** {entrada['content']}")
+        st.markdown(f"<div class='chat-question'>🧴 <strong>Tú:</strong> {entrada['content']}</div>", unsafe_allow_html=True)
     else:
-        # Mostrar respuesta del asistente con formato Markdown real
-        st.markdown(entrada["content"], unsafe_allow_html=False)
+        st.markdown(f"<div class='chat-response'>{entrada['content']}</div>", unsafe_allow_html=True)
 
 # --- Entrada tipo chat (Enter → enviar, Shift+Enter → salto de línea) ---
 pregunta = st.chat_input("Escribe tu consulta y pulsa Enter para enviar...")
