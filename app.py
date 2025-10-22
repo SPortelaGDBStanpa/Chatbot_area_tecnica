@@ -12,7 +12,6 @@ from sklearn.metrics.pairwise import cosine_similarity
 from nltk.corpus import stopwords
 import streamlit as st
 import unicodedata
-import markdown
 
 def quitar_acentos(texto):
     """Elimina acentos y caracteres diacríticos de un texto."""
@@ -131,7 +130,7 @@ def buscar_contexto(pregunta, top_k=5, umbral_similitud=0.78):
     if not any(t in pregunta_sin_acentos for t in temas_no_relevantes):
         fragmentos = [f for f in fragmentos if not any(t in f.lower() for t in temas_no_relevantes)]
 
-    return fragmentos
+    return fragmentos   
 
 FRASES_POR_TEMA = {
     "cosmetico": [
@@ -425,33 +424,16 @@ st.set_page_config(
 # --- Estilos modernos ---
 st.markdown("""
     <style>
-    body {
-        font-family: "Segoe UI", sans-serif;
-        background-color: #f7f9fb;
-    }
-    .main {
-        background-color: #ffffff;
-        padding: 2rem 3rem;
-        border-radius: 1rem;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-    }
     .chat-response {
         background-color: #ffffff;
         border: 1px solid #e0e4e8;
         border-radius: 0.8rem;
-        padding: 1.2rem 1.5rem;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+        padding: 1.5rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
         margin-top: 1rem;
-        white-space: pre-wrap;
-        line-height: 1.6;
-    }
-    .chat-question {
-        background-color: #e9f3ff;
-        border-radius: 0.8rem;
-        padding: 0.8rem 1rem;
-        margin-top: 1rem;
-        font-weight: 500;
-        color: #003366;
+        line-height: 1.7;
+        font-size: 16px;
+        color: #1a1a1a;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -480,8 +462,7 @@ if pregunta:
     st.session_state.historial.append({"role": "user", "content": pregunta})
     with st.spinner("Analizando consulta..."):
         respuesta = responder_chatbot(pregunta)
-        html_respuesta = markdown.markdown(respuesta, extensions=["extra"])
-    st.session_state.historial.append({"role": "assistant", "content": html_respuesta})
+    st.session_state.historial.append({"role": "assistant", "content": respuesta})
     st.rerun()
 
 st.markdown("<hr>", unsafe_allow_html=True)
