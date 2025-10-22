@@ -418,9 +418,17 @@ if "historial" not in st.session_state:
 # --- Mostrar conversación previa ---
 for entrada in st.session_state.historial:
     if entrada["role"] == "user":
-        st.markdown(f"<div class='chat-question'>🧴 <strong>Tú:</strong> {entrada['content']}</div>", unsafe_allow_html=True)
+        st.markdown(f"🧴 **Tú:** {entrada['content']}")
     else:
-        st.markdown(f"<div class='chat-response'>{entrada['content']}</div>", unsafe_allow_html=True)
+        # ✅ Muestra la respuesta en un contenedor visual, pero dejando a Streamlit procesar Markdown
+        st.markdown(
+            f"""
+<div class="chat-response" style="white-space:normal; line-height:1.7; font-size:16px;">
+{entrada['content']}
+</div>
+""",
+            unsafe_allow_html=False
+        )
 
 # --- Entrada tipo chat (Enter → enviar, Shift+Enter → salto de línea) ---
 pregunta = st.chat_input("Escribe tu consulta y pulsa Enter para enviar...")
