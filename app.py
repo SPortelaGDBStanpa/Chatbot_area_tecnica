@@ -180,7 +180,7 @@ REDIRECCIONES_PREDEFINIDAS = {
             "australia", "nueva zelanda", "ee.uu", "eeuu", "china", "reino unido"
         ],
         "respuesta": """
-<b>Buenos días,</b><br><br>
+Buenos días,<br><br>
 Para consultas relacionadas con terceros países pueden ayudaros mis compañeras del área internacional. 
 Lamentablemente, ellas aún no tienen acceso a la plataforma de Consultas Técnicas, 
 pero puedes escribirles a la dirección de correo electrónico:<br>
@@ -197,7 +197,7 @@ Departamento Técnico.
             "envase sostenible", "packaging sostenible"
         ],
         "respuesta": """
-<b>Buenos días,</b><br><br>
+Buenos días,<br><br>
 En relación con tu consulta, lamentamos informarte que la responsable de Sostenibilidad, 
 quien podría ayudarte, no tiene acceso a la nueva plataforma de consultas técnicas. 
 No obstante, puedes dirigirte a ella a través del siguiente correo electrónico:<br>
