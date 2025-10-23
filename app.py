@@ -170,7 +170,7 @@ REDIRECCIONES_PREDEFINIDAS = {
             "australia", "nueva zelanda", "ee.uu", "eeuu", "china", "reino unido"
         ],
         "respuesta": """\
-**Buenos días,**
+Buenos días,
 
 Para consultas relacionadas con terceros países pueden ayudaros mis compañeras del área internacional.  
 Lamentablemente, ellas aún no tienen acceso a la plataforma de Consultas Técnicas,  
@@ -189,7 +189,7 @@ Departamento Técnico.
             "envase sostenible", "packaging sostenible"
         ],
         "respuesta": """\
-**Buenos días,**
+Buenos días,
 
 En relación con tu consulta, lamentamos informarte que la responsable de Sostenibilidad,  
 quien podría ayudarte, no tiene acceso a la nueva plataforma de consultas técnicas.  
