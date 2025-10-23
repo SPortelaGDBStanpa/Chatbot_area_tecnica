@@ -179,7 +179,7 @@ pero puedes escribirles a la siguiente dirección de correo electrónico:
 [stanpainternacional@stanpa.com](mailto:stanpainternacional@stanpa.com)
 
 Espero haber sido de utilidad y si necesita alguna cosa más, estamos a su disposición.
-  
+
 Reciba un cordial saludo,  
 Departamento Técnico.
 """
@@ -244,11 +244,15 @@ def responder_chatbot(pregunta, mostrar_contexto=False):
     fragmentos = buscar_contexto(pregunta)
     contexto = "\n\n".join(fragmentos) if fragmentos else ""
     prompt = f"""
-Eres un asistente experto en legislación cosmética, biocidas y productos regulados.
-Debes redactar una respuesta formal, precisa y técnica.
+Eres un asistente técnico experto en legislación cosmética, biocidas y productos regulados.
+Redacta una respuesta formal, precisa y técnica, pero **no incluyas fórmulas de cortesía como 'Estimado/a' ni nombres del remitente.**
+Tampoco incluyas una firma con nombres personales; la respuesta debe cerrarse con 'Departamento Técnico.'
+Empieza la respuesta directamente tras el saludo.
+
 Contexto normativo: {contexto}
 Pregunta: {pregunta}
 """
+
     respuesta = client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[{"role": "user", "content": prompt}],
