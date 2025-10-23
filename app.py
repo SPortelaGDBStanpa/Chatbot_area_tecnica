@@ -247,7 +247,7 @@ def responder_chatbot(pregunta, mostrar_contexto=False):
 Eres un asistente técnico experto en legislación cosmética, biocidas y productos regulados.
 Redacta una respuesta formal, precisa y técnica, pero **no incluyas fórmulas de cortesía como 'Estimado/a' ni nombres del remitente.**
 Tampoco incluyas una firma con nombres personales; la respuesta debe cerrarse con 'Departamento Técnico.'
-Empieza la respuesta directamente tras el saludo.
+Empieza la respuesta directamente tras el saludo y no incluyas saludos ni cierres redundantes.
 
 Contexto normativo: {contexto}
 Pregunta: {pregunta}
@@ -259,10 +259,12 @@ Pregunta: {pregunta}
         temperature=0.1
     ).choices[0].message.content.strip()
 
+    # --- Ajuste final ---
     if not respuesta.lower().startswith(("buenos días", "buenas tardes")):
-        respuesta = f"{saludo}<br><br>{respuesta}"
-    if "departamento técnico" not in respuesta.lower():
-        respuesta += f"<br><br>{despedida}"
+        respuesta = f"{saludo}\n\n{respuesta}"
+
+    # 💬 Añadir siempre la despedida fija, sin depender del contenido
+    respuesta = f"{respuesta}\n\n{despedida}"
 
     return respuesta
 
