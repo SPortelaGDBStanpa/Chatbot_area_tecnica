@@ -12,6 +12,12 @@ from sklearn.metrics.pairwise import cosine_similarity
 from nltk.corpus import stopwords
 import streamlit as st
 import unicodedata
+import markdown
+
+def render_html_markdown(texto):
+    """Convierte markdown a HTML dentro del contenedor estilizado."""
+    html = markdown.markdown(texto, extensions=["extra", "sane_lists"])
+    return f"<div class='chat-response'>{html}</div>"
 
 def quitar_acentos(texto):
     """Elimina acentos y caracteres diacríticos de un texto."""
@@ -279,7 +285,7 @@ for entrada in st.session_state.historial:
     if entrada["role"] == "user":
         st.markdown(f"<div class='chat-question'>🧴 <strong>Tú:</strong> {entrada['content']}</div>", unsafe_allow_html=True)
     else:
-        st.markdown(f"<div class='chat-response'>{entrada['content']}</div>", unsafe_allow_html=True)
+        st.markdown(render_html_markdown(entrada["content"]), unsafe_allow_html=True)
 
 pregunta = st.chat_input("Escribe tu consulta y pulsa Enter para enviar...")
 
