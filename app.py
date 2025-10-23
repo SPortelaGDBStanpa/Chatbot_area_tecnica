@@ -214,8 +214,8 @@ def responder_chatbot(pregunta, mostrar_contexto=False):
     hora = datetime.now().hour
     saludo = "Buenos días," if hora < 12 else "Buenas tardes,"
     despedida = (
-        "\n\nEspero haber sido de utilidad y si necesita alguna cosa más, estamos a su disposición.\n\n"
-        "Reciba un cordial saludo,\n"
+        "<br><br>Espero haber sido de utilidad y si necesita alguna cosa más, estamos a su disposición.<br><br>"
+        "Reciba un cordial saludo,<br>"
         "Departamento Técnico."
     )
 
