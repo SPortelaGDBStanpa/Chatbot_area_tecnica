@@ -178,7 +178,8 @@ pero puedes escribirles a la siguiente dirección de correo electrónico:
 
 [stanpainternacional@stanpa.com](mailto:stanpainternacional@stanpa.com)
 
-Espero haber sido de utilidad y si necesita alguna cosa más, estamos a su disposición.  
+Espero haber sido de utilidad y si necesita alguna cosa más, estamos a su disposición.
+  
 Reciba un cordial saludo,  
 Departamento Técnico.
 """
@@ -197,7 +198,8 @@ No obstante, puedes dirigirte a ella a través del siguiente correo electrónico
 
 [lucia.jimenez@stanpa.com](mailto:lucia.jimenez@stanpa.com)
 
-Espero haber sido de utilidad y si necesita alguna cosa más, estamos a su disposición.  
+Espero haber sido de utilidad y si necesita alguna cosa más, estamos a su disposición.
+
 Reciba un cordial saludo,  
 Departamento Técnico.
 """
