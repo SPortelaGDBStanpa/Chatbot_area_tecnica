@@ -13,6 +13,7 @@ from nltk.corpus import stopwords
 import streamlit as st
 import unicodedata
 import markdown
+import re
 
 def render_html_markdown(texto):
     """Convierte markdown a HTML dentro del contenedor estilizado."""
@@ -212,22 +213,32 @@ def responder_chatbot(pregunta, mostrar_contexto=False):
     saludo = "Buenos días," if hora < 12 else "Buenas tardes,"
     despedida = (
         "\n\nEspero haber sido de utilidad y si necesita alguna cosa más, estamos a su disposición.\n\n"
-        "Reciba un cordial saludo,"
-        "\nDepartamento Técnico."
+        "Reciba un cordial saludo,\n"
+        "Departamento Técnico."
     )
 
     pregunta_sin_acentos = quitar_acentos(pregunta.lower())
 
-    # 🔹 Redirecciones fijas
+    # 🔹 1️⃣ Redirecciones predefinidas (internacional, sostenibilidad, etc.)
+    for area, datos in REDIRECCIONES_PREDEFINIDAS.items():
+        for palabra in datos["palabras"]:
+            # Coincidencia robusta (palabra exacta, aunque esté seguida de coma o punto)
+            if re.search(rf"\b{re.escape(palabra)}\b", pregunta_sin_acentos):
+                return datos["respuesta"]
+
+    # 🔹 2️⃣ Temas fijos (vitamina A, cosmética animal, etc.)
     if any(p in pregunta_sin_acentos for p in ["vitamina a", "retinol", "retinil"]):
         texto = "\n\n".join(FRASES_POR_TEMA["vitamina a"])
         return f"{saludo}\n\n{texto}\n\n{despedida}"
 
-    if any(p in pregunta_sin_acentos for p in ["cosmetica animal", "cosmetica para animales", "higiene animal", "cuidado animal", "cosmetica veterinaria", "productos para mascotas"]):
+    if any(p in pregunta_sin_acentos for p in [
+        "cosmetica animal", "cosmetica para animales", "higiene animal",
+        "cuidado animal", "cosmetica veterinaria", "productos para mascotas"
+    ]):
         texto = FRASES_POR_TEMA["cosmetica para animales"][0]
         return f"{saludo}\n\n{texto}\n\n{despedida}"
-
-    # 🔹 Caso general: usar embeddings y GPT
+    
+    # 🔹 3️⃣ Caso general: embeddings + GPT
     fragmentos = buscar_contexto(pregunta)
     contexto = "\n\n".join(fragmentos) if fragmentos else ""
     prompt = f"""
