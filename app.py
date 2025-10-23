@@ -212,8 +212,8 @@ def responder_chatbot(pregunta, mostrar_contexto=False):
     saludo = "Buenos días," if hora < 12 else "Buenas tardes,"
     despedida = (
         "\n\nEspero haber sido de utilidad y si necesita alguna cosa más, estamos a su disposición.\n\n"
-        "Reciba un cordial saludo,\n"
-        "Departamento Técnico."
+        "Reciba un cordial saludo,"
+        "\nDepartamento Técnico."
     )
 
     pregunta_sin_acentos = quitar_acentos(pregunta.lower())
