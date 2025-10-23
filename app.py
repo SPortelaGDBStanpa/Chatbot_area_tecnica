@@ -91,7 +91,7 @@ try:
     emb_consultas = np.load("emb_consultas_comprimido.npz")["emb"]
     print("✅ Embeddings cargados correctamente.")
 except FileNotFoundError:
-    st.error("❌ No se encontró el archivo 'emb_consultas_comprimido.npz'. Genera primero los embeddings con 'generar_embeddings_excel.py'.")
+    st.error("❌ No se encontró el archivo 'emb_consultas_comprimido.npz'.")
     st.stop()
 
 # ==============================================
@@ -114,11 +114,9 @@ def buscar_contexto(pregunta, top_k=5, umbral_similitud=0.65):
     indices_ordenados = sorted(indices_validos, key=lambda i: similitudes[i], reverse=True)[:top_k]
     fragmentos = [pares[i][1] for i in indices_ordenados]
 
-    temas_no_relevantes = ["uñas", "depilación", "perfume", "peluquería", "barniz"]
-    if not any(t in pregunta_sin_acentos for t in temas_no_relevantes):
-        fragmentos = [f for f in fragmentos if not any(t in f.lower() for t in temas_no_relevantes)]
-
-    return fragmentos   
+    indices_ordenados = sorted(indices_validos, key=lambda i: similitudes[i], reverse=True)[:top_k]
+    fragmentos = [pares[i][1] for i in indices_ordenados]
+    return fragmentos
 
 # ==============================================
 # FRASES POR TEMA
@@ -130,31 +128,34 @@ FRASES_POR_TEMA = {
     "cosmetica para animales" : [
         """Los productos destinados a la higiene o cuidado de animales no se consideran cosméticos y quedan fuera del ámbito de aplicación del Reglamento 1223/2009.
             
-        En el contexto español, estos productos fueron considerados inicialmente como productos zoosanitarios. Tras la publicación del Real Decreto 867/2020 dejaron de estar incluidos en dicho marco, aunque una sentencia del Tribunal Supremo en 2023 anuló parcialmente ese Real Decreto, devolviendo temporalmente a los productos cosméticos para animales la consideración de zoosanitarios.
- 
-        Finalmente, con la Ley 1/2025, de 1 de abril, que modifica la Ley 8/2003 de sanidad animal, se elimina la obligatoriedad de registro de los productos de higiene, cuidado y manejo de animales (HCM) y del material y utillaje zoosanitario (MUZ). En consecuencia, estos productos quedan fuera del ámbito competencial del Ministerio de Agricultura y Pesca.
+En el contexto español, estos productos fueron considerados inicialmente como productos zoosanitarios. Tras la publicación del Real Decreto 867/2020 dejaron de estar incluidos en dicho marco, aunque una sentencia del Tribunal Supremo en 2023 anuló parcialmente ese Real Decreto, devolviendo temporalmente a los productos cosméticos para animales la consideración de zoosanitarios.
 
-        Ante esta situación, el pasado mes de junio nos pusimos en contacto con ASEMAZ, quienes nos informaron de lo siguiente:Con la publicación de la Ley 1/2025, determinados productos zoosanitarios destinados a higiene, cuidado y manejo de los animales ya no tienen que ser notificados por el titular de los mismos para su comercialización.
+Finalmente, con la Ley 1/2025, de 1 de abril, que modifica la Ley 8/2003 de sanidad animal, se elimina la obligatoriedad de registro de los productos de higiene, cuidado y manejo de animales (HCM) y del material y utillaje zoosanitario (MUZ). En consecuencia, estos productos quedan fuera del ámbito competencial del Ministerio de Agricultura y Pesca.
 
-        Ahora bien, decimos “determinados” dado que dependiendo del “claim” reivindicado por el producto (biocidas), tendrán las siguientes obligaciones:
+Ante esta situación, el pasado mes de junio nos pusimos en contacto con ASEMAZ, quienes nos informaron de lo siguiente:Con la publicación de la Ley 1/2025, determinados productos zoosanitarios destinados a higiene, cuidado y manejo de los animales ya no tienen que ser notificados por el titular de los mismos para su comercialización.
 
-        **Registro nacional:**
-        - Si se trata de un zoosanitario para uso en entorno ganadero (insecticida, larvicida, desinfectante, etc.), deberá solicitarse su registro ante el MAPA como plaguicida, con los correspondientes ensayos según la eficacia que se quiera defender. Más información: https://www.mapa.gob.es/es/ganaderia/temas/sanidad-animal-higiene-ganadera/Higiene-de-la-produccion-primaria-ganadera/registro-de-productos-zoosanitarios/
-        - Si se trata de un plaguicida no agrícola (desinfectante de uso en la industria alimentaria o uso ambiental, rodenticida, etc.), deberá solicitarse su registro ante Sanidad como plaguicida no agrícola. Más información: https://www.sanidad.gob.es/areas/sanidadAmbiental/biocidas/registro/regNacional/requisitos_nacional.htm
-        - Si se trata de un biocida tipo 3 (higiene veterinaria con función biocida), es obligatoria la notificación a Sanidad de conformidad con la Disposición Transitoria Segunda del RD 1054/2002 (no requiere ensayos de eficacia). Más información: https://www.sanidad.gob.es/areas/sanidadAmbiental/biocidas/registro/regPlaguicidas/dt2notificanuevo.htm
+Ahora bien, decimos “determinados” dado que dependiendo del “claim” reivindicado por el producto (biocidas), tendrán las siguientes obligaciones:
 
-        En todo caso, para los casos anteriores, una vez que las sustancias activas que formen parte del producto (sustancias biocidas) cuenten con Reglamento de Ejecución para los tipos de productos biocidas que se quieren defender, esos productos deberán solicitar su registro por procedimiento europeo, de conformidad con las exigencias del Reglamento (UE) 528/2012.
+**Registro nacional:**
+- Si se trata de un zoosanitario para uso en entorno ganadero (insecticida, larvicida, desinfectante, etc.), deberá solicitarse su registro ante el **MAPA** como plaguicida, con los correspondientes ensayos según la eficacia que se quiera defender.  
+  Más información: [Registro de productos zoosanitarios - MAPA](https://www.mapa.gob.es/es/ganaderia/temas/sanidad-animal-higiene-ganadera/Higiene-de-la-produccion-primaria-ganadera/registro-de-productos-zoosanitarios/)
+- Si se trata de un plaguicida no agrícola (desinfectante de uso en la industria alimentaria o uso ambiental, rodenticida, etc.), deberá solicitarse su registro ante **Sanidad** como plaguicida no agrícola.  
+  Más información: [Registro nacional de plaguicidas no agrícolas - Ministerio de Sanidad](https://www.sanidad.gob.es/areas/sanidadAmbiental/biocidas/registro/regNacional/requisitos_nacional.htm)
+- Si se trata de un **biocida tipo 3** (higiene veterinaria con función biocida), es obligatoria la notificación a Sanidad de conformidad con la **Disposición Transitoria Segunda del RD 1054/2002** (no requiere ensayos de eficacia).  
+  Más información: [Notificación DT2 - Ministerio de Sanidad](https://www.sanidad.gob.es/areas/sanidadAmbiental/biocidas/registro/regPlaguicidas/dt2notificanuevo.htm)
 
-        En todo caso, si los productos que se deseen comercializar estén afectados o no por lo indicado anteriormente, son productos químicos peligrosos (mezclas o sustancias) quedarán afectados por la normativa de clasificación y etiquetado de mezclas y sustancias químicas, debiendo estar debidamente etiquetados, contar con ficha de datos de seguridad (FDS) y ser notificados a toxicología a través de un expediente PCN.
+En todo caso, para los casos anteriores, una vez que las sustancias activas que formen parte del producto (sustancias biocidas) cuenten con Reglamento de Ejecución para los tipos de productos biocidas que se quieren defender, esos productos deberán solicitar su registro por procedimiento europeo, de conformidad con las exigencias del Reglamento (UE) 528/2012.
 
-        Por tanto, tal y como recomiendan desde ASEMAZ, lo más conveniente es poneros en contacto con la autoridad competente correspondiente para que os puedan dar información detallada."""
+En todo caso, si los productos que se deseen comercializar estén afectados o no por lo indicado anteriormente, son productos químicos peligrosos (mezclas o sustancias) quedarán afectados por la normativa de clasificación y etiquetado de mezclas y sustancias químicas, debiendo estar debidamente etiquetados, contar con ficha de datos de seguridad (FDS) y ser notificados a toxicología a través de un expediente PCN.
+
+Por tanto, tal y como recomiendan desde ASEMAZ, lo más conveniente es poneros en contacto con la autoridad competente correspondiente para que os puedan dar información detallada."""
     ],
     "vitamina a": [
         """De acuerdo con el Reglamento 1223/2009, para cualquier producto cosmético que contenga las sustancias 'Retinol', 'Retinyl Acetate' o 'Retinyl Palmitate', la mención **“Este producto contiene vitamina A. Tenga en cuenta su ingesta diaria antes de utilizarlo”** es obligatoria. 
-        Por tanto, la advertencia debe figurar literalmente en el etiquetado del producto.""",
+Por tanto, la advertencia debe figurar literalmente en el etiquetado del producto.""",
         
         """Entendemos que esta advertencia pueda generar cierta confusión en el consumidor, pero modificar la redacción obligatoria no es una opción, ya que debe figurar exactamente con la redacción establecida en el Reglamento. 
-        No obstante, y siempre bajo criterio del evaluador de seguridad del producto, puede añadirse una advertencia complementaria que aclare que el producto es de uso cosmético y no debe ingerirse."""
+No obstante, y siempre bajo criterio del evaluador de seguridad del producto, puede añadirse una advertencia complementaria que aclare que el producto es de uso cosmético y no debe ingerirse."""
     ]
 }
 
@@ -167,32 +168,36 @@ REDIRECCIONES_PREDEFINIDAS = {
             "exportar", "exportación", "terceros países", "fuera de la ue",
             "australia", "nueva zelanda", "ee.uu", "eeuu", "china", "reino unido"
         ],
-        "respuesta": """
-Buenos días,<br><br>
-Para consultas relacionadas con terceros países pueden ayudaros mis compañeras del área internacional. 
-Lamentablemente, ellas aún no tienen acceso a la plataforma de Consultas Técnicas, 
-pero puedes escribirles a la dirección de correo electrónico:<br>
-<a href="mailto:stanpainternacional@stanpa.com" style="color:#0078D7; font-weight:bold; text-decoration:none;">
-stanpainternacional@stanpa.com</a><br><br>
-Espero haber sido de utilidad y si necesita alguna cosa más, estamos a su disposición.<br>
-Reciba un cordial saludo,<br>
+        "respuesta": """\
+**Buenos días,**
+
+Para consultas relacionadas con terceros países pueden ayudaros mis compañeras del área internacional.  
+Lamentablemente, ellas aún no tienen acceso a la plataforma de Consultas Técnicas,  
+pero puedes escribirles a la siguiente dirección de correo electrónico:
+
+[stanpainternacional@stanpa.com](mailto:stanpainternacional@stanpa.com)
+
+Espero haber sido de utilidad y si necesita alguna cosa más, estamos a su disposición.  
+Reciba un cordial saludo,  
 Departamento Técnico.
 """
     },
     "sostenibilidad": {
         "palabras": [
-            "sostenibilidad", "medio ambiente", "huella", "ecodiseño", 
+            "sostenibilidad", "medio ambiente", "huella", "ecodiseño",
             "envase sostenible", "packaging sostenible"
         ],
-        "respuesta": """
-Buenos días,<br><br>
-En relación con tu consulta, lamentamos informarte que la responsable de Sostenibilidad, 
-quien podría ayudarte, no tiene acceso a la nueva plataforma de consultas técnicas. 
-No obstante, puedes dirigirte a ella a través del siguiente correo electrónico:<br>
-<a href="mailto:lucia.jimenez@stanpa.com" style="color:#0078D7; font-weight:bold; text-decoration:none;">
-lucia.jimenez@stanpa.com</a><br><br>
-Espero haber sido de utilidad y si necesita alguna cosa más, estamos a su disposición.<br>
-Reciba un cordial saludo,<br>
+        "respuesta": """\
+**Buenos días,**
+
+En relación con tu consulta, lamentamos informarte que la responsable de Sostenibilidad,  
+quien podría ayudarte, no tiene acceso a la nueva plataforma de consultas técnicas.  
+No obstante, puedes dirigirte a ella a través del siguiente correo electrónico:
+
+[lucia.jimenez@stanpa.com](mailto:lucia.jimenez@stanpa.com)
+
+Espero haber sido de utilidad y si necesita alguna cosa más, estamos a su disposición.  
+Reciba un cordial saludo,  
 Departamento Técnico.
 """
     }
@@ -206,34 +211,25 @@ def responder_chatbot(pregunta, mostrar_contexto=False):
     hora = datetime.now().hour
     saludo = "Buenos días," if hora < 12 else "Buenas tardes,"
     despedida = (
-        "<br><br>Espero haber sido de utilidad y si necesita alguna cosa más, estamos a su disposición.<br><br>"
-        "Reciba un cordial saludo,<br>"
+        "\n\nEspero haber sido de utilidad y si necesita alguna cosa más, estamos a su disposición.\n\n"
+        "Reciba un cordial saludo,\n"
         "Departamento Técnico."
     )
 
-    pregunta_lower = pregunta.lower()
-    pregunta_sin_acentos = quitar_acentos(pregunta_lower)
+    pregunta_sin_acentos = quitar_acentos(pregunta.lower())
 
     # 🔹 Redirecciones fijas
-    for area, datos in REDIRECCIONES_PREDEFINIDAS.items():
-        if any(p in pregunta_sin_acentos for p in datos["palabras"]):
-            return datos["respuesta"]
+    if any(p in pregunta_sin_acentos for p in ["vitamina a", "retinol", "retinil"]):
+        texto = "\n\n".join(FRASES_POR_TEMA["vitamina a"])
+        return f"{saludo}\n\n{texto}\n\n{despedida}"
 
+    if any(p in pregunta_sin_acentos for p in ["cosmetica animal", "cosmetica para animales", "higiene animal", "cuidado animal", "cosmetica veterinaria", "productos para mascotas"]):
+        texto = FRASES_POR_TEMA["cosmetica para animales"][0]
+        return f"{saludo}\n\n{texto}\n\n{despedida}"
+
+    # 🔹 Caso general: usar embeddings y GPT
     fragmentos = buscar_contexto(pregunta)
     contexto = "\n\n".join(fragmentos) if fragmentos else ""
-
-    # --- 🧠 Detección avanzada de temas normativos ---
-    # 🔹 Cosmética para animales
-    if any(p in pregunta_sin_acentos for p in ["cosmetica animal", "cosmetica para animales", "higiene animal", "cuidado animal", "cosmetica veterinaria", "productos para mascotas"]):
-        texto = FRASES_POR_TEMA["cosmetica para animales"][0].replace("\n", "<br>")
-        return f"{saludo}<br><br>{texto}<br><br>{despedida}"
-
-    # 🔹 Vitamina A
-    if any(p in pregunta_sin_acentos for p in ["vitamina a", "retinol", "retinil"]):
-        texto = "<br><br>".join(FRASES_POR_TEMA["vitamina a"])
-        return f"{saludo}<br><br>{texto}<br><br>{despedida}"
-
-    # --- Si no es tema fijo, usar GPT ---
     prompt = f"""
 Eres un asistente experto en legislación cosmética, biocidas y productos regulados.
 Debes redactar una respuesta formal, precisa y técnica.
@@ -275,7 +271,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 st.markdown("<h1 style='text-align:center;'>💬 Chatbot Regulatorio Interno</h1>", unsafe_allow_html=True)
-st.markdown("<p style='text-align:center;color:gray;'>Consultas sobre normativa cosmética, biocidas y productos regulados</p>", unsafe_allow_html=True)
+st.markdown("<p style='text-align:center;color:gray;'>Consultas sobre normativa cosmética y regulación</p>", unsafe_allow_html=True)
 st.markdown("<hr>", unsafe_allow_html=True)
 
 if "historial" not in st.session_state:
