@@ -263,10 +263,17 @@ Pregunta: {pregunta}
     if not respuesta.lower().startswith(("buenos días", "buenas tardes")):
         respuesta = f"{saludo}\n\n{respuesta}"
 
-    # 💬 Añadir siempre la despedida fija, sin depender del contenido
+    # 🧹 Eliminar cualquier cierre redundante del modelo
+    for texto_final in ["departamento técnico", "reciba un cordial saludo"]:
+        if texto_final in respuesta.lower():
+            respuesta = respuesta[:respuesta.lower().rfind(texto_final)].strip()
+            break  # detiene la limpieza en la primera coincidencia
+
+    # 💬 Añadir siempre la despedida fija
     respuesta = f"{respuesta}\n\n{despedida}"
 
     return respuesta
+
 
 # ==============================================
 # 🖥️ INTERFAZ STREAMLIT
