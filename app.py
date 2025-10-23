@@ -136,13 +136,13 @@ Ante esta situación, el pasado mes de junio nos pusimos en contacto con ASEMAZ,
 
 Ahora bien, decimos “determinados” dado que dependiendo del “claim” reivindicado por el producto (biocidas), tendrán las siguientes obligaciones:
 
-**Registro nacional:**
+**Registro nacional:**\n
 - Si se trata de un zoosanitario para uso en entorno ganadero (insecticida, larvicida, desinfectante, etc.), deberá solicitarse su registro ante el **MAPA** como plaguicida, con los correspondientes ensayos según la eficacia que se quiera defender.  
-  Más información: [Registro de productos zoosanitarios - MAPA](https://www.mapa.gob.es/es/ganaderia/temas/sanidad-animal-higiene-ganadera/Higiene-de-la-produccion-primaria-ganadera/registro-de-productos-zoosanitarios/)
+  Más información: [Registro de productos zoosanitarios - MAPA](https://www.mapa.gob.es/es/ganaderia/temas/sanidad-animal-higiene-ganadera/Higiene-de-la-produccion-primaria-ganadera/registro-de-productos-zoosanitarios/)\n
 - Si se trata de un plaguicida no agrícola (desinfectante de uso en la industria alimentaria o uso ambiental, rodenticida, etc.), deberá solicitarse su registro ante **Sanidad** como plaguicida no agrícola.  
-  Más información: [Registro nacional de plaguicidas no agrícolas - Ministerio de Sanidad](https://www.sanidad.gob.es/areas/sanidadAmbiental/biocidas/registro/regNacional/requisitos_nacional.htm)
+  Más información: [Registro nacional de plaguicidas no agrícolas - Ministerio de Sanidad](https://www.sanidad.gob.es/areas/sanidadAmbiental/biocidas/registro/regNacional/requisitos_nacional.htm)\n
 - Si se trata de un **biocida tipo 3** (higiene veterinaria con función biocida), es obligatoria la notificación a Sanidad de conformidad con la **Disposición Transitoria Segunda del RD 1054/2002** (no requiere ensayos de eficacia).  
-  Más información: [Notificación DT2 - Ministerio de Sanidad](https://www.sanidad.gob.es/areas/sanidadAmbiental/biocidas/registro/regPlaguicidas/dt2notificanuevo.htm)
+  Más información: [Notificación DT2 - Ministerio de Sanidad](https://www.sanidad.gob.es/areas/sanidadAmbiental/biocidas/registro/regPlaguicidas/dt2notificanuevo.htm)\n
 
 En todo caso, para los casos anteriores, una vez que las sustancias activas que formen parte del producto (sustancias biocidas) cuenten con Reglamento de Ejecución para los tipos de productos biocidas que se quieren defender, esos productos deberán solicitar su registro por procedimiento europeo, de conformidad con las exigencias del Reglamento (UE) 528/2012.
 
