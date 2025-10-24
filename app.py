@@ -260,8 +260,8 @@ def responder_chatbot(pregunta, mostrar_contexto=False):
         return f"{saludo}\n\n{texto}\n\n{despedida}"
     
     # 🔹 3️⃣ Detección específica: símbolo "e" metrológica
-    if re.search(r'(℮|[\"“” ]?e[\"“” ]?metrologic)', pregunta_sin_acentos):
-        print("✅ Prioridad detectada: tema e metrológica")
+    if re.search(r'(℮|[\"“”\' ]?e[\"“”\' ]?[- ]?metrologic)', pregunta_sin_acentos) and "vitamina" not in pregunta_sin_acentos:
+        print("✅ Tema detectado: e metrológica")
         texto = "\n\n".join(FRASES_POR_TEMA["e metrologica"])
         return f"{saludo}\n\n{texto}\n\n{despedida}"
 
