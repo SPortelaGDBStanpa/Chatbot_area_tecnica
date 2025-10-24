@@ -101,7 +101,7 @@ except FileNotFoundError:
 def buscar_contexto(pregunta, top_k=5, umbral_similitud=0.65):
     """
     Busca los fragmentos más relevantes del Excel usando embeddings.
-    Si encuentra una coincidencia casi exacta (similitud >= 0.85), devuelve esa respuesta literal.
+    Si encuentra una coincidencia casi exacta (similitud >= 0.80), devuelve esa respuesta literal.
     """
     pregunta_sin_acentos = quitar_acentos(pregunta.lower())
 
@@ -123,7 +123,7 @@ def buscar_contexto(pregunta, top_k=5, umbral_similitud=0.65):
 
     # ✅ NUEVO: si hay una coincidencia muy fuerte, usar la respuesta literal del Excel
     max_sim = similitudes[indices_ordenados[0]]
-    if max_sim >= 0.85:
+    if max_sim >= 0.80:
         print(f"✅ Coincidencia fuerte detectada ({max_sim:.3f}) — usando respuesta literal del Excel.")
         return [pares[indices_ordenados[0]][1]]
 
