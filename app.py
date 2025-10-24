@@ -104,6 +104,11 @@ except FileNotFoundError:
 def buscar_contexto(pregunta, top_k=5, umbral_similitud=0.78):
     pregunta_normalizada = quitar_acentos(pregunta.strip().lower())
 
+        # Evita que use embeddings para temas tratados explícitamente
+    if re.search(r'(℮|[\"“” ]?e[\"“” ]?metrologic)', pregunta_normalizada):
+        print("🔒 Saltando búsqueda por embeddings (tema e metrológica).")
+        return []
+
     # ✅ Coincidencia literal exacta (antes de usar embeddings)
     for i, (preg, resp) in enumerate(pares):
         if quitar_acentos(str(preg).strip().lower()) == pregunta_normalizada:
@@ -255,7 +260,8 @@ def responder_chatbot(pregunta, mostrar_contexto=False):
         return f"{saludo}\n\n{texto}\n\n{despedida}"
     
     # 🔹 3️⃣ Detección específica: símbolo "e" metrológica
-    if re.search(r'(℮|[\"“” ]?e[\"“” ]?metrologic)', pregunta_sin_acentos) and "vitamina" not in pregunta_sin_acentos:
+    if re.search(r'(℮|[\"“” ]?e[\"“” ]?metrologic)', pregunta_sin_acentos):
+        print("✅ Prioridad detectada: tema e metrológica")
         texto = "\n\n".join(FRASES_POR_TEMA["e metrologica"])
         return f"{saludo}\n\n{texto}\n\n{despedida}"
 
