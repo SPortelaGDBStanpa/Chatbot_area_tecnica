@@ -99,15 +99,28 @@ except FileNotFoundError:
 # 4️⃣ Buscar contexto relevante con embeddings
 # ==============================================
 def buscar_contexto(pregunta, top_k=5, umbral_similitud=0.65):
+    """Busca los fragmentos de respuesta más relevantes según similitud semántica.
+    Si hay una coincidencia casi exacta (>0.90), devuelve esa respuesta literal del Excel.
+    """
     pregunta_sin_acentos = quitar_acentos(pregunta.lower())
 
+    # Crear embedding de la pregunta
     emb_pregunta = client.embeddings.create(
         model="text-embedding-3-small",
         input=pregunta_sin_acentos
     ).data[0].embedding
 
+    # Calcular similitudes
     similitudes = cosine_similarity([emb_pregunta], emb_consultas)[0]
+    indices_ordenados = similitudes.argsort()[-top_k:][::-1]
 
+    # ✅ NUEVO: si hay una coincidencia casi exacta, usa esa respuesta literal del Excel
+    max_sim = similitudes[indices_ordenados[0]]
+    if max_sim > 0.90:
+        print(f"🔍 Coincidencia exacta detectada ({max_sim:.2f})")
+        return [pares[indices_ordenados[0]][1]]
+
+    # Si no hay coincidencias tan fuertes, usa las más parecidas (como antes)
     indices_validos = [i for i, s in enumerate(similitudes) if s >= umbral_similitud]
     if not indices_validos:
         indices_validos = similitudes.argsort()[-2:][::-1]
@@ -115,8 +128,9 @@ def buscar_contexto(pregunta, top_k=5, umbral_similitud=0.65):
     indices_ordenados = sorted(indices_validos, key=lambda i: similitudes[i], reverse=True)[:top_k]
     fragmentos = [pares[i][1] for i in indices_ordenados]
 
-    indices_ordenados = sorted(indices_validos, key=lambda i: similitudes[i], reverse=True)[:top_k]
-    fragmentos = [pares[i][1] for i in indices_ordenados]
+    # 🧹 Eliminar duplicados
+    fragmentos = list(dict.fromkeys(fragmentos))
+
     return fragmentos
 
 # ==============================================
