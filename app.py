@@ -100,7 +100,7 @@ except FileNotFoundError:
 # ==============================================
 def buscar_contexto(pregunta, top_k=5, umbral_similitud=0.65):
     """Busca los fragmentos de respuesta más relevantes según similitud semántica.
-    Si hay una coincidencia casi exacta (>0.90), devuelve esa respuesta literal del Excel.
+    Si hay una coincidencia casi exacta (>0.85), devuelve esa respuesta literal del Excel.
     """
     pregunta_sin_acentos = quitar_acentos(pregunta.lower())
 
@@ -116,7 +116,7 @@ def buscar_contexto(pregunta, top_k=5, umbral_similitud=0.65):
 
     # ✅ NUEVO: si hay una coincidencia casi exacta, usa esa respuesta literal del Excel
     max_sim = similitudes[indices_ordenados[0]]
-    if max_sim > 0.90:
+    if max_sim > 0.85:
         print(f"🔍 Coincidencia exacta detectada ({max_sim:.2f})")
         return [pares[indices_ordenados[0]][1]]
 
