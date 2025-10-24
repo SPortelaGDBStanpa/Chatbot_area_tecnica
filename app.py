@@ -81,8 +81,12 @@ ruta_excel = "conversaciones_revisando.xlsx"
 df = pd.read_excel(ruta_excel)
 df.columns = df.columns.str.strip().str.lower()
 
+# --- Crear listas de consultas y respuestas ---
 consultas = df[df["role"].str.lower() == "user"]["content"].tolist()
 respuestas = df[df["role"].str.lower() == "assistant"]["content"].tolist()
+
+# --- Normalizar acentos y espacios (para comparaciones coherentes) ---
+consultas = [quitar_acentos(str(c).strip().lower()) for c in consultas]
 pares = list(zip(consultas, respuestas))
 
 # ==============================================
@@ -98,47 +102,30 @@ except FileNotFoundError:
 # ==============================================
 # 4️⃣ Buscar contexto relevante con embeddings
 # ==============================================
-def buscar_contexto(pregunta, top_k=5, umbral_similitud=0.65):
-    """
-    Busca los fragmentos más relevantes del Excel usando embeddings.
-    Si encuentra una coincidencia casi exacta (similitud >= 0.80), devuelve esa respuesta literal.
-    """
-    pregunta_sin_acentos = quitar_acentos(pregunta.lower())
+def buscar_contexto(pregunta, top_k=5, umbral_similitud=0.78):
+    pregunta_normalizada = quitar_acentos(pregunta.strip().lower())
 
+    # ✅ Coincidencia literal exacta (antes de usar embeddings)
+    for i, (preg, resp) in enumerate(pares):
+        if quitar_acentos(str(preg).strip().lower()) == pregunta_normalizada:
+            print("✅ Coincidencia exacta encontrada — usando respuesta literal del Excel.")
+            return [resp]
+
+    # 🔹 Si no hay coincidencia exacta, usar embeddings
     emb_pregunta = client.embeddings.create(
         model="text-embedding-3-small",
-        input=pregunta_sin_acentos
+        input=pregunta_normalizada
     ).data[0].embedding
 
     similitudes = cosine_similarity([emb_pregunta], emb_consultas)[0]
-    indices_ordenados = similitudes.argsort()[::-1]  # mayor a menor
+    indices_ordenados = similitudes.argsort()[-top_k:][::-1]
 
-    print("\n--- 🔍 DIAGNÓSTICO DETALLADO DE SIMILITUDES ---")
-    for i in indices_ordenados[:5]:
-        print(f"{similitudes[i]:.3f} → {pares[i][0][:100]!r}")
-    print("--------------------------------------------------\n")
-
-    max_sim = similitudes[indices_ordenados[0]]
-    mejor_pregunta = pares[indices_ordenados[0]][0]
-
-    print(f"🧠 Mejor coincidencia encontrada: {max_sim:.3f}")
-    print(f"🗂 Pregunta más similar en el Excel:\n{mejor_pregunta}\n")
-
-    if max_sim >= 0.80:
-        print(f"✅ Coincidencia fuerte ({max_sim:.3f}) — usando respuesta literal del Excel.\n")
+    if similitudes[indices_ordenados[0]] >= umbral_similitud:
+        print(f"✅ Coincidencia fuerte ({similitudes[indices_ordenados[0]]:.2f}) — usando respuesta del Excel.")
         return [pares[indices_ordenados[0]][1]]
-    else:
-        print(f"⚠️ Ninguna coincidencia supera el umbral. Máx. detectado: {max_sim:.3f}\n")
 
-    indices_validos = [i for i, s in enumerate(similitudes) if s >= umbral_similitud]
-    if not indices_validos:
-        indices_validos = similitudes.argsort()[-2:][::-1]
-
-    indices_ordenados = sorted(indices_validos, key=lambda i: similitudes[i], reverse=True)[:top_k]
-    fragmentos = [pares[i][1] for i in indices_ordenados]
-
-    fragmentos = list(dict.fromkeys(fragmentos))  # eliminar duplicados
-    return fragmentos
+    print("⚠️ No se encontró coincidencia fuerte — se generará respuesta nueva.")
+    return [pares[i][1] for i in indices_ordenados]
 
 # ==============================================
 # FRASES POR TEMA
