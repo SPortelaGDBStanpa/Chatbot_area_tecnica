@@ -165,6 +165,13 @@ Por tanto, la advertencia debe figurar literalmente en el etiquetado del product
         
         """Entendemos que esta advertencia pueda generar cierta confusión en el consumidor, pero modificar la redacción obligatoria no es una opción, ya que debe figurar exactamente con la redacción establecida en el Reglamento. 
 No obstante, y siempre bajo criterio del evaluador de seguridad del producto, puede añadirse una advertencia complementaria que aclare que el producto es de uso cosmético y no debe ingerirse."""
+    ],
+    "e metrologica": [
+        """Según el Real Decreto 1801/2008, la inclusión del símbolo "℮" en el etiquetado de los envases **no es obligatoria**.  
+El artículo 9.c) establece que los envases que cumplen con las modalidades de control estadístico de lotes especificadas en el decreto pueden llevar el símbolo "℮", lo que certifica que el envase cumple con las disposiciones del mismo.
+
+Si el símbolo "℮" ya está presente en el envase secundario, **no es necesario incluirlo también en el envase primario**, siempre y cuando se garantice que el envase primario cumple con los requisitos de control establecidos.  
+Sin embargo, es recomendable que la información sea clara y accesible para el consumidor, por lo que se sugiere mantener la coherencia en el etiquetado de ambos envases."""
     ]
 }
 
@@ -246,6 +253,12 @@ def responder_chatbot(pregunta, mostrar_contexto=False):
         "cuidado animal", "cosmetica veterinaria", "productos para mascotas"
     ]):
         texto = FRASES_POR_TEMA["cosmetica para animales"][0]
+        return f"{saludo}\n\n{texto}\n\n{despedida}"
+    
+    if any(p in pregunta_sin_acentos for p in [
+        "e metrologica", "simbolo e", "símbolo e", "e metrológica"
+    ]):
+        texto = "\n\n".join(FRASES_POR_TEMA["e metrologica"])
         return f"{saludo}\n\n{texto}\n\n{despedida}"
     
     # 🔹 3️⃣ Caso general: embeddings + GPT
