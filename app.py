@@ -166,7 +166,7 @@ Por tanto, la advertencia debe figurar literalmente en el etiquetado del product
         """Entendemos que esta advertencia pueda generar cierta confusión en el consumidor, pero modificar la redacción obligatoria no es una opción, ya que debe figurar exactamente con la redacción establecida en el Reglamento. 
 No obstante, y siempre bajo criterio del evaluador de seguridad del producto, puede añadirse una advertencia complementaria que aclare que el producto es de uso cosmético y no debe ingerirse."""
     ],
-    "'e' metrologica": [
+    "e metrologica": [
         """Según el Real Decreto 1801/2008, la inclusión del símbolo "℮" en el etiquetado de los envases **no es obligatoria**.  
 El artículo 9.c) establece que los envases que cumplen con las modalidades de control estadístico de lotes especificadas en el decreto pueden llevar el símbolo "℮", lo que certifica que el envase cumple con las disposiciones del mismo.
 
@@ -258,9 +258,9 @@ def responder_chatbot(pregunta, mostrar_contexto=False):
     if any(p in pregunta_sin_acentos for p in [
         "e metrologica", "simbolo e", "símbolo e", "e metrológica"
     ]):
-        texto = "\n\n".join(FRASES_POR_TEMA["'e' metrologica"])
+        texto = "\n\n".join(FRASES_POR_TEMA["e metrologica"])
         return f"{saludo}\n\n{texto}\n\n{despedida}"
-    
+        
     # 🔹 3️⃣ Caso general: embeddings + GPT
     fragmentos = buscar_contexto(pregunta)
     contexto = "\n\n".join(fragmentos) if fragmentos else ""
