@@ -99,8 +99,9 @@ except FileNotFoundError:
 # 4️⃣ Buscar contexto relevante con embeddings
 # ==============================================
 def buscar_contexto(pregunta, top_k=5, umbral_similitud=0.65):
-    """Busca los fragmentos de respuesta más relevantes según similitud semántica.
-    Si hay una coincidencia casi exacta (>0.85), devuelve esa respuesta literal del Excel.
+    """
+    Busca los fragmentos más relevantes del Excel usando embeddings.
+    Si encuentra una coincidencia casi exacta (similitud >= 0.85), devuelve esa respuesta literal.
     """
     pregunta_sin_acentos = quitar_acentos(pregunta.lower())
 
@@ -110,17 +111,23 @@ def buscar_contexto(pregunta, top_k=5, umbral_similitud=0.65):
         input=pregunta_sin_acentos
     ).data[0].embedding
 
-    # Calcular similitudes
+    # Calcular similitudes con las consultas del Excel
     similitudes = cosine_similarity([emb_pregunta], emb_consultas)[0]
-    indices_ordenados = similitudes.argsort()[-top_k:][::-1]
+    indices_ordenados = similitudes.argsort()[::-1]  # de mayor a menor
 
-    # ✅ NUEVO: si hay una coincidencia casi exacta, usa esa respuesta literal del Excel
+    # 🧩 Mostrar las coincidencias más altas en consola (para diagnóstico)
+    print("\n--- 🔍 Diagnóstico de similitudes ---")
+    for i in indices_ordenados[:5]:
+        print(f"{similitudes[i]:.3f} → {pares[i][0][:90]}...")
+    print("--------------------------------------\n")
+
+    # ✅ NUEVO: si hay una coincidencia muy fuerte, usar la respuesta literal del Excel
     max_sim = similitudes[indices_ordenados[0]]
-    if max_sim > 0.85:
-        print(f"🔍 Coincidencia exacta detectada ({max_sim:.2f})")
+    if max_sim >= 0.85:
+        print(f"✅ Coincidencia fuerte detectada ({max_sim:.3f}) — usando respuesta literal del Excel.")
         return [pares[indices_ordenados[0]][1]]
 
-    # Si no hay coincidencias tan fuertes, usa las más parecidas (como antes)
+    # 🔹 Si no hay coincidencias fuertes, usar los fragmentos más similares
     indices_validos = [i for i, s in enumerate(similitudes) if s >= umbral_similitud]
     if not indices_validos:
         indices_validos = similitudes.argsort()[-2:][::-1]
@@ -130,7 +137,6 @@ def buscar_contexto(pregunta, top_k=5, umbral_similitud=0.65):
 
     # 🧹 Eliminar duplicados
     fragmentos = list(dict.fromkeys(fragmentos))
-
     return fragmentos
 
 # ==============================================
