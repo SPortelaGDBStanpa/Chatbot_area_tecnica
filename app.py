@@ -243,7 +243,6 @@ def responder_chatbot(pregunta, mostrar_contexto=False):
     # 🔹 1️⃣ Redirecciones predefinidas (internacional, sostenibilidad, etc.)
     for area, datos in REDIRECCIONES_PREDEFINIDAS.items():
         for palabra in datos["palabras"]:
-            # Coincidencia robusta (palabra exacta, aunque esté seguida de coma o punto)
             if re.search(rf"\b{re.escape(palabra)}\b", pregunta_sin_acentos):
                 return datos["respuesta"]
 
@@ -259,13 +258,44 @@ def responder_chatbot(pregunta, mostrar_contexto=False):
         texto = FRASES_POR_TEMA["cosmetica para animales"][0]
         return f"{saludo}\n\n{texto}\n\n{despedida}"
     
-    # 🔹 3️⃣ Detección específica: símbolo "e" metrológica
+    # 🔹 3️⃣ Detección específica: símbolo "℮" metrológica (con complemento inteligente)
     if re.search(r'(℮|[\"“”\' ]?e[\"“”\' ]?[- ]?metrologic)', pregunta_sin_acentos) and "vitamina" not in pregunta_sin_acentos:
         print("✅ Tema detectado: e metrológica")
-        texto = "\n\n".join(FRASES_POR_TEMA["e metrologica"])
-        return f"{saludo}\n\n{texto}\n\n{despedida}"
+        texto_base = "\n\n".join(FRASES_POR_TEMA["e metrologica"])
 
-    # 🔹 3️⃣ Caso general: embeddings + GPT
+        # --- Ver si hay otras cuestiones además de la e metrológica ---
+        if re.search(r'(adem[aá]s|otra|tambi[eé]n|aparte|ademas)', pregunta_sin_acentos):
+            print("🧠 Detectada pregunta adicional, generando complemento...")
+
+            prompt = f"""
+Eres un experto en legislación cosmética y etiquetado.
+La siguiente respuesta ya es correcta y está aprobada:
+
+--- RESPUESTA BASE ---
+{texto_base}
+----------------------
+
+El usuario ha hecho una consulta más amplia:
+{pregunta}
+
+Redacta SOLO un párrafo adicional complementario (si procede),
+sin modificar ni repetir la respuesta base.
+Si no hay nada relevante que añadir, responde con una frase breve confirmando que la respuesta base es suficiente.
+"""
+
+            complemento = client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[{"role": "user", "content": prompt}],
+                temperature=0.2
+            ).choices[0].message.content.strip()
+
+            texto_final = f"{texto_base}\n\n{complemento}"
+        else:
+            texto_final = texto_base
+
+        return f"{saludo}\n\n{texto_final}\n\n{despedida}"
+
+    # 🔹 4️⃣ Caso general: embeddings + GPT
     fragmentos = buscar_contexto(pregunta)
     contexto = "\n\n".join(fragmentos) if fragmentos else ""
     prompt = f"""
@@ -292,13 +322,12 @@ Pregunta: {pregunta}
     for texto_final in ["departamento técnico", "reciba un cordial saludo"]:
         if texto_final in respuesta.lower():
             respuesta = respuesta[:respuesta.lower().rfind(texto_final)].strip()
-            break  # detiene la limpieza en la primera coincidencia
+            break
 
     # 💬 Añadir siempre la despedida fija
     respuesta = f"{respuesta}\n\n{despedida}"
 
     return respuesta
-
 
 # ==============================================
 # 🖥️ INTERFAZ STREAMLIT
