@@ -81,13 +81,12 @@ ruta_excel = "conversaciones_revisando.xlsx"
 df = pd.read_excel(ruta_excel)
 df.columns = df.columns.str.strip().str.lower()
 
-# --- Crear listas de consultas y respuestas ---
-consultas = df[df["role"].str.lower() == "user"]["content"].tolist()
+consultas_raw = df[df["role"].str.lower() == "user"]["content"].tolist()
 respuestas = df[df["role"].str.lower() == "assistant"]["content"].tolist()
 
-# --- Normalizar acentos y espacios (para comparaciones coherentes) ---
-consultas = [quitar_acentos(str(c).strip().lower()) for c in consultas]
-pares = list(zip(consultas, respuestas))
+# Versión normalizada para comparar texto (sin acentos)
+consultas_norm = [quitar_acentos(str(c).strip().lower()) for c in consultas_raw]
+pares = list(zip(consultas_norm, respuestas))
 
 # ==============================================
 # 2️⃣ CARGAR EMBEDDINGS PRECALCULADOS
@@ -255,12 +254,13 @@ def responder_chatbot(pregunta, mostrar_contexto=False):
         texto = FRASES_POR_TEMA["cosmetica para animales"][0]
         return f"{saludo}\n\n{texto}\n\n{despedida}"
     
+    # 🔹 2.3️⃣ Detección específica: símbolo "e" metrológica
     if any(p in pregunta_sin_acentos for p in [
         "e metrologica", "simbolo e", "símbolo e", "e metrológica"
-    ]):
+    ]) and "vitamina" not in pregunta_sin_acentos:
         texto = "\n\n".join(FRASES_POR_TEMA["e metrologica"])
         return f"{saludo}\n\n{texto}\n\n{despedida}"
-        
+    
     # 🔹 3️⃣ Caso general: embeddings + GPT
     fragmentos = buscar_contexto(pregunta)
     contexto = "\n\n".join(fragmentos) if fragmentos else ""
