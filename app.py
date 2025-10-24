@@ -81,11 +81,11 @@ ruta_excel = "conversaciones_revisando.xlsx"
 df = pd.read_excel(ruta_excel)
 df.columns = df.columns.str.strip().str.lower()
 
-consultas_raw = df[df["role"].str.lower() == "user"]["content"].tolist()
+consultas = df[df["role"].str.lower() == "user"]["content"].tolist()
 respuestas = df[df["role"].str.lower() == "assistant"]["content"].tolist()
 
-# Versión normalizada para comparar texto (sin acentos)
-consultas_norm = [quitar_acentos(str(c).strip().lower()) for c in consultas_raw]
+# Normaliza las consultas para comparación exacta (sin acentos)
+consultas_norm = [quitar_acentos(str(c).strip().lower()) for c in consultas]
 pares = list(zip(consultas_norm, respuestas))
 
 # ==============================================
