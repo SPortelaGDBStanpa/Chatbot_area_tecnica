@@ -255,9 +255,10 @@ def responder_chatbot(pregunta, mostrar_contexto=False):
         return f"{saludo}\n\n{texto}\n\n{despedida}"
     
     # 🔹 3️⃣ Detección específica: símbolo "e" metrológica
-    if re.search(r'\be[" ]?metrologic', pregunta_sin_acentos) and "vitamina" not in pregunta_sin_acentos:
+    if re.search(r'(℮|e[" ]?metrologic)', pregunta_sin_acentos) and "vitamina" not in pregunta_sin_acentos:
         texto = "\n\n".join(FRASES_POR_TEMA["e metrologica"])
         return f"{saludo}\n\n{texto}\n\n{despedida}"
+
     
     # 🔹 3️⃣ Caso general: embeddings + GPT
     fragmentos = buscar_contexto(pregunta)
