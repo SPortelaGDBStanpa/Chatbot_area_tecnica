@@ -256,7 +256,7 @@ def responder_chatbot(pregunta, mostrar_contexto=False):
     
     # 🔹 2.3️⃣ Detección específica: símbolo "e" metrológica
     if any(p in pregunta_sin_acentos for p in [
-        "e metrologica", "simbolo e", "símbolo e", "e metrológica"
+        "e metrologica", "simbolo e", "símbolo e", "e metrológica", "℮"
     ]) and "vitamina" not in pregunta_sin_acentos:
         texto = "\n\n".join(FRASES_POR_TEMA["e metrologica"])
         return f"{saludo}\n\n{texto}\n\n{despedida}"
