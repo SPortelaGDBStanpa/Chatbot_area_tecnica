@@ -244,6 +244,11 @@ def responder_chatbot(pregunta, mostrar_contexto=False):
     for area, datos in REDIRECCIONES_PREDEFINIDAS.items():
         for palabra in datos["palabras"]:
             if re.search(rf"\b{re.escape(palabra)}\b", pregunta_sin_acentos):
+                # ⚠️ Evitar redirección si la pregunta trata de FDS o transporte
+                if any(t in pregunta_sin_acentos for t in [
+                    "fds", "transporte", "inflamable", "clasificación", "etiquetado", "mezcla", "seguridad", "sustancias peligrosas"
+                ]):
+                    continue  # no redirige
                 return datos["respuesta"]
 
     # 🔹 2️⃣ Temas fijos (vitamina A, cosmética animal, etc.)
