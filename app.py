@@ -27,48 +27,6 @@ def quitar_acentos(texto):
         if unicodedata.category(c) != 'Mn'
     )
 
-def detectar_redireccion(fragmentos):
-    """Detecta si alguna respuesta del contexto indica redirección a otro departamento."""
-    palabras_clave = [
-        "contacte con", "diríjase a", "debe consultarlo con", "responsabilidad de",
-        "departamento de", "servicio de", "autoridad competente", "remítase a",
-        "redirigirse a", "consultar con", "trasladar la consulta a"
-    ]
-    texto_unido = " ".join(fragmentos).lower()
-    return any(p in texto_unido for p in palabras_clave)
-
-def extraer_redireccion(fragmentos):
-    """Extrae el fragmento que contiene una instrucción de redirección e identifica el departamento o responsable."""
-    palabras_clave = [
-        "contacte con", "diríjase a", "debe consultarlo con", "responsabilidad de",
-        "departamento de", "servicio de", "autoridad competente", "remítase a",
-        "redirigirse a", "consultar con", "trasladar la consulta a", "deberás escribir un correo",
-        "deberás enviar un correo", "correo a la dirección", "puedes contactar con",
-        "escriba a", "escribir a", "envíe un correo", "mandar un correo"
-    ]
-
-    departamentos = [
-        "internacional", "reglamentación", "toxicología", "formulación",
-        "medio ambiente", "jurídico", "seguridad del producto",
-        "autoridad competente", "asuntos científicos", "asuntos regulatorios"
-    ]
-
-    for frag in fragmentos:
-        texto = frag.lower()
-        if any(p in texto for p in palabras_clave):
-            # Buscar si se menciona un departamento específico
-            for palabra in departamentos:
-                if palabra in texto:
-                    return f"{frag.strip()} (Corresponde al departamento de {palabra.capitalize()})."
-
-            # Buscar si hay dirección de correo
-            if "@" in frag:
-                return f"{frag.strip()} (Se indica una dirección de correo para contacto directo)."
-
-            return frag.strip()
-
-    return None
-
 # ==============================================
 # 1️⃣ CONFIGURACIÓN INICIAL
 # ==============================================
@@ -104,7 +62,7 @@ except FileNotFoundError:
 def buscar_contexto(pregunta, top_k=5, umbral_similitud=0.78):
     pregunta_normalizada = quitar_acentos(pregunta.strip().lower())
 
-        # Evita que use embeddings para temas tratados explícitamente
+    # Evita que use embeddings para temas tratados explícitamente
     if re.search(r'(℮|[\"“” ]?e[\"“” ]?metrologic)', pregunta_normalizada):
         print("🔒 Saltando búsqueda por embeddings (tema e metrológica).")
         return []
@@ -240,18 +198,37 @@ def responder_chatbot(pregunta, mostrar_contexto=False):
 
     pregunta_sin_acentos = quitar_acentos(pregunta.lower())
 
-    # 🔹 1️⃣ Redirecciones predefinidas (internacional, sostenibilidad, etc.)
-    for area, datos in REDIRECCIONES_PREDEFINIDAS.items():
-        for palabra in datos["palabras"]:
-            if re.search(rf"\b{re.escape(palabra)}\b", pregunta_sin_acentos):
-                # ⚠️ Evitar redirección si la pregunta trata de FDS o transporte
-                if any(t in pregunta_sin_acentos for t in [
-                    "fds", "transporte", "inflamable", "clasificación", "etiquetado", "mezcla", "seguridad", "sustancias peligrosas"
-                ]):
-                    continue  # no redirige
-                return datos["respuesta"]
+    # ======================================================
+    # 🔹 Redirecciones inteligentes (Internacional / Sostenibilidad)
+    # ======================================================
+    paises_fuera_ue = [
+        "australia", "nueva zelanda", "eeuu", "ee.uu", "china", "reino unido",
+        "canadá", "canada", "japón", "japon", "corea", "india", "brasil", "méxico", "mexico"
+    ]
+    palabras_exportacion = [
+        "exportar", "exportación", "fuera de la ue", "terceros países", "terceros paises"
+    ]
+    palabras_sostenibilidad = [
+        "sostenibilidad", "envase sostenible", "reciclaje", "reciclado",
+        "símbolos de contenedores", "contenedor", "etiqueta ambiental",
+        "huella de carbono", "ecodiseño", "packaging sostenible", "material reciclado"
+    ]
 
-    # 🔹 2️⃣ Temas fijos (vitamina A, cosmética animal, etc.)
+    if (
+        any(p in pregunta_sin_acentos for p in paises_fuera_ue)
+        or (
+            any(p in pregunta_sin_acentos for p in palabras_exportacion)
+            and not any(t in pregunta_sin_acentos for t in [
+                "fds", "transporte", "inflamable", "clasificación", "etiquetado", "mezcla", "seguridad", "sustancias peligrosas"
+            ])
+        )
+    ):
+        return REDIRECCIONES_PREDEFINIDAS["internacional"]["respuesta"]
+
+    if any(p in pregunta_sin_acentos for p in palabras_sostenibilidad):
+        return REDIRECCIONES_PREDEFINIDAS["sostenibilidad"]["respuesta"]
+
+    # 🔹 Temas fijos
     if any(p in pregunta_sin_acentos for p in ["vitamina a", "retinol", "retinil"]):
         texto = "\n\n".join(FRASES_POR_TEMA["vitamina a"])
         return f"{saludo}\n\n{texto}\n\n{despedida}"
@@ -262,16 +239,13 @@ def responder_chatbot(pregunta, mostrar_contexto=False):
     ]):
         texto = FRASES_POR_TEMA["cosmetica para animales"][0]
         return f"{saludo}\n\n{texto}\n\n{despedida}"
-    
-    # 🔹 3️⃣ Detección específica: símbolo "℮" metrológica (con complemento inteligente)
+
+    # 🔹 Detección específica: símbolo "℮" metrológica
     if re.search(r'(℮|[\"“”\' ]?e[\"“”\' ]?[- ]?metrologic)', pregunta_sin_acentos) and "vitamina" not in pregunta_sin_acentos:
         print("✅ Tema detectado: e metrológica")
         texto_base = "\n\n".join(FRASES_POR_TEMA["e metrologica"])
 
-        # --- Ver si hay otras cuestiones además de la e metrológica ---
         if re.search(r'(adem[aá]s|otra|tambi[eé]n|aparte|ademas)', pregunta_sin_acentos):
-            print("🧠 Detectada pregunta adicional, generando complemento...")
-
             prompt = f"""
 Eres un experto en legislación cosmética y etiquetado.
 La siguiente respuesta ya es correcta y está aprobada:
@@ -287,13 +261,11 @@ Redacta SOLO un párrafo adicional complementario (si procede),
 sin modificar ni repetir la respuesta base.
 Si no hay nada relevante que añadir, responde con una frase breve confirmando que la respuesta base es suficiente.
 """
-
             complemento = client.chat.completions.create(
                 model="gpt-4o-mini",
                 messages=[{"role": "user", "content": prompt}],
                 temperature=0.2
             ).choices[0].message.content.strip()
-
             texto_final = f"{texto_base}\n\n{complemento}"
         else:
             texto_final = texto_base
