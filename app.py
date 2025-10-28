@@ -143,7 +143,7 @@ Sin embargo, es recomendable que la información sea clara y accesible para el c
 REDIRECCIONES_PREDEFINIDAS = {
     "internacional": {
         "palabras": [
-            "exportar", "exportación", "terceros países", "fuera de la ue", "aplican las prohibiciones europea", "Panamá",
+            "exportar", "exportación", "terceros países", "fuera de la ue",
             "australia", "nueva zelanda", "ee.uu", "eeuu", "china", "reino unido"
         ],
         "respuesta": """\
@@ -202,11 +202,11 @@ def responder_chatbot(pregunta, mostrar_contexto=False):
     # 🔹 Redirecciones inteligentes (Internacional / Sostenibilidad)
     # ======================================================
     paises_fuera_ue = [
-        "australia", "nueva zelanda", "eeuu", "ee.uu", "china", "reino unido",
+        "australia", "nueva zelanda", "eeuu", "ee.uu", "china", "reino unido", "Panamá",
         "canadá", "canada", "japón", "japon", "corea", "india", "brasil", "méxico", "mexico"
     ]
     palabras_exportacion = [
-        "exportar", "exportación", "fuera de la ue", "terceros países", "terceros paises"
+        "exportar", "exportación", "fuera de la ue", "terceros países", "terceros paises", "aplican las prohibiciones europea" 
     ]
     palabras_sostenibilidad = [
         "sostenibilidad", "envase sostenible", "reciclaje", "reciclado",
