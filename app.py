@@ -45,7 +45,7 @@ df.columns = df.columns.str.strip().str.lower()
 
 # CARGAR Y PROCESAR PDFs
 
-carpeta_pdfs = "C:/Users/susana.portela/OneDrive - Asociación Nacional de Perfumería y Cosmética/Documentos/Chatbot_area_tecnica/Chatbot_area_tecnica"  # 📁 cambia esta ruta si tus PDFs están en otra carpeta
+carpeta_pdfs = "."
 textos_pdf = []
 nombres_pdf = []
 
