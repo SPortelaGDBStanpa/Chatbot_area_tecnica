@@ -202,7 +202,7 @@ def responder_chatbot(pregunta, mostrar_contexto=False):
     # 🔹 Redirecciones inteligentes (Internacional / Sostenibilidad)
     # ======================================================
     paises_fuera_ue = [
-        "australia", "nueva zelanda", "eeuu", "ee.uu", "china", "reino unido", "Panamá",
+        "australia", "nueva zelanda", "eeuu", "ee.uu", "china", "reino unido", "Panamá", "Suiza",
         "canadá", "canada", "japón", "japon", "corea", "india", "brasil", "méxico", "mexico"
     ]
     palabras_exportacion = [
