@@ -14,6 +14,8 @@ import streamlit as st
 import unicodedata
 import markdown
 import re
+from datetime import datetime
+import string
 
 def render_html_markdown(texto):
     """Convierte markdown a HTML dentro del contenedor estilizado."""
@@ -142,10 +144,6 @@ Sin embargo, es recomendable que la información sea clara y accesible para el c
 # ==============================================
 REDIRECCIONES_PREDEFINIDAS = {
     "internacional": {
-        "palabras": [
-            "exportar", "exportación", "terceros países", "fuera de la ue", "Suiza",
-            "australia", "nueva zelanda", "ee.uu", "eeuu", "china", "reino unido"
-        ],
         "respuesta": """\
 Buenos días,
 
@@ -162,10 +160,6 @@ Departamento Técnico.
 """
     },
     "sostenibilidad": {
-        "palabras": [
-            "sostenibilidad", "medio ambiente", "huella", "ecodiseño",
-            "envase sostenible", "packaging sostenible"
-        ],
         "respuesta": """\
 Buenos días,
 
@@ -187,7 +181,6 @@ Departamento Técnico.
 # 5️⃣ FUNCIÓN PRINCIPAL
 # ==============================================
 def responder_chatbot(pregunta, mostrar_contexto=False):
-    from datetime import datetime
     hora = datetime.now().hour
     saludo = "Buenos días," if hora < 12 else "Buenas tardes,"
     despedida = (
@@ -196,43 +189,45 @@ def responder_chatbot(pregunta, mostrar_contexto=False):
         "Departamento Técnico."
     )
 
+    # 🔹 Limpieza y normalización de texto
     pregunta_sin_acentos = quitar_acentos(pregunta.lower())
+    pregunta_sin_acentos = pregunta_sin_acentos.translate(str.maketrans('', '', string.punctuation))
 
     # ======================================================
-    # 🔹 Redirecciones inteligentes (Internacional / Sostenibilidad)
+    # 🔹 1️⃣ Detección de temas INTERNACIONALES
     # ======================================================
-    paises_fuera_ue = [
-        "australia", "nueva zelanda", "eeuu", "ee.uu", "china", "reino unido", "Panamá", "Suiza",
-        "canadá", "canada", "japón", "japon", "corea", "india", "brasil", "méxico", "mexico"
-    ]
-    palabras_exportacion = [
-        "exportar", "exportación", "fuera de la ue", "terceros países", "terceros paises", "aplican las prohibiciones europea" 
-    ]
-    palabras_sostenibilidad = [
-        "sostenibilidad", "envase sostenible", "reciclaje", "reciclado",
-        "símbolos de contenedores", "contenedor", "etiqueta ambiental",
-        "huella de carbono", "ecodiseño", "packaging sostenible", "material reciclado"
+    palabras_internacionales = [
+        "exportar", "exportacion", "terceros paises", "fuera de la ue",
+        "suiza", "australia", "nueva zelanda", "eeuu", "ee uu", "china",
+        "reino unido", "panama", "canada", "japon", "corea",
+        "india", "brasil", "mexico"
     ]
 
-    if (
-        any(p in pregunta_sin_acentos for p in paises_fuera_ue)
-        or (
-            any(p in pregunta_sin_acentos for p in palabras_exportacion)
-            and not any(t in pregunta_sin_acentos for t in [
-                "fds", "transporte", "inflamable", "clasificación", "etiquetado", "mezcla", "seguridad", "sustancias peligrosas"
-            ])
-        )
-    ):
+    if any(re.search(rf'\b{p}\b', pregunta_sin_acentos) for p in palabras_internacionales):
         return REDIRECCIONES_PREDEFINIDAS["internacional"]["respuesta"]
 
-    if any(p in pregunta_sin_acentos for p in palabras_sostenibilidad):
+    # ======================================================
+    # 🔹 2️⃣ Detección de temas de SOSTENIBILIDAD
+    # ======================================================
+    palabras_sostenibilidad = [
+        "sostenibilidad", "envase sostenible", "reciclaje", "reciclado",
+        "simbolos de contenedores", "contenedor", "etiqueta ambiental",
+        "huella de carbono", "ecodiseno", "packaging sostenible", "material reciclado"
+    ]
+
+    if any(re.search(rf'\b{p}\b', pregunta_sin_acentos) for p in palabras_sostenibilidad):
         return REDIRECCIONES_PREDEFINIDAS["sostenibilidad"]["respuesta"]
 
-    # 🔹 Temas fijos
+    # ======================================================
+    # 🔹 3️⃣ Temas específicos: Vitamina A
+    # ======================================================
     if any(p in pregunta_sin_acentos for p in ["vitamina a", "retinol", "retinil"]):
         texto = "\n\n".join(FRASES_POR_TEMA["vitamina a"])
         return f"{saludo}\n\n{texto}\n\n{despedida}"
 
+    # ======================================================
+    # 🔹 4️⃣ Temas específicos: Cosmética para animales
+    # ======================================================
     if any(p in pregunta_sin_acentos for p in [
         "cosmetica animal", "cosmetica para animales", "higiene animal",
         "cuidado animal", "cosmetica veterinaria", "productos para mascotas"
@@ -240,12 +235,15 @@ def responder_chatbot(pregunta, mostrar_contexto=False):
         texto = FRASES_POR_TEMA["cosmetica para animales"][0]
         return f"{saludo}\n\n{texto}\n\n{despedida}"
 
-    # 🔹 Detección específica: símbolo "℮" metrológica
-    if re.search(r'(℮|[\"“”\' ]?e[\"“”\' ]?[- ]?metrologic)', pregunta_sin_acentos) and "vitamina" not in pregunta_sin_acentos:
+    # ======================================================
+    # 🔹 5️⃣ Detección de “℮” metrológica
+    # ======================================================
+    if re.search(r'(℮|["“”\' ]?e["“”\' ]?[- ]?metrologic)', pregunta_sin_acentos) and "vitamina" not in pregunta_sin_acentos:
         print("✅ Tema detectado: e metrológica")
         texto_base = "\n\n".join(FRASES_POR_TEMA["e metrologica"])
 
-        if re.search(r'(adem[aá]s|otra|tambi[eé]n|aparte|ademas)', pregunta_sin_acentos):
+        # Si la consulta es más amplia, añade párrafo complementario
+        if re.search(r'(ademas|otra|tambien|aparte)', pregunta_sin_acentos):
             prompt = f"""
 Eres un experto en legislación cosmética y etiquetado.
 La siguiente respuesta ya es correcta y está aprobada:
@@ -272,7 +270,9 @@ Si no hay nada relevante que añadir, responde con una frase breve confirmando q
 
         return f"{saludo}\n\n{texto_final}\n\n{despedida}"
 
-    # 🔹 4️⃣ Caso general: embeddings + GPT
+    # ======================================================
+    # 🔹 6️⃣ Caso general: búsqueda por embeddings
+    # ======================================================
     fragmentos = buscar_contexto(pregunta)
     contexto = "\n\n".join(fragmentos) if fragmentos else ""
     prompt = f"""
@@ -291,19 +291,18 @@ Pregunta: {pregunta}
         temperature=0.1
     ).choices[0].message.content.strip()
 
-    # --- Ajuste final ---
+    # ======================================================
+    # 🔹 7️⃣ Ajustes de formato
+    # ======================================================
     if not respuesta.lower().startswith(("buenos días", "buenas tardes")):
         respuesta = f"{saludo}\n\n{respuesta}"
 
-    # 🧹 Eliminar cualquier cierre redundante del modelo
     for texto_final in ["departamento técnico", "reciba un cordial saludo"]:
         if texto_final in respuesta.lower():
             respuesta = respuesta[:respuesta.lower().rfind(texto_final)].strip()
             break
 
-    # 💬 Añadir siempre la despedida fija
     respuesta = f"{respuesta}\n\n{despedida}"
-
     return respuesta
 
 # ==============================================
