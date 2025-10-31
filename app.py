@@ -45,27 +45,27 @@ df.columns = df.columns.str.strip().str.lower()
 
 # CARGAR Y PROCESAR PDFs
 
-carpeta_pdfs = "."
-textos_pdf = []
-nombres_pdf = []
+# carpeta_pdfs = "."
+# textos_pdf = []
+# nombres_pdf = []
 
-for archivo in os.listdir(carpeta_pdfs):
-    if archivo.lower().endswith(".pdf"):
-        ruta_pdf = os.path.join(carpeta_pdfs, archivo)
-        try:
-            with fitz.open(ruta_pdf) as pdf:
-                texto = ""
-                for pagina in pdf:
-                    texto += pagina.get_text()
-            textos_pdf.append(texto)
-            nombres_pdf.append(archivo)
-        except Exception as e:
-            print(f"⚠️ Error leyendo {archivo}: {e}")
+# for archivo in os.listdir(carpeta_pdfs):
+    # if archivo.lower().endswith(".pdf"):
+        # ruta_pdf = os.path.join(carpeta_pdfs, archivo)
+        # try:
+            # with fitz.open(ruta_pdf) as pdf:
+                # texto = ""
+                # for pagina in pdf:
+                    # texto += pagina.get_text()
+            # textos_pdf.append(texto)
+            # nombres_pdf.append(archivo)
+        # except Exception as e:
+            # print(f"⚠️ Error leyendo {archivo}: {e}")
 
-if textos_pdf:
-    print(f"✅ Se cargaron {len(textos_pdf)} PDFs correctamente.")
-else:
-    print("⚠️ No se encontraron PDFs en la carpeta especificada.")
+# if textos_pdf:
+    # print(f"✅ Se cargaron {len(textos_pdf)} PDFs correctamente.")
+# else:
+    # print("⚠️ No se encontraron PDFs en la carpeta especificada.")
 
 consultas = df[df["role"].str.lower() == "user"]["content"].tolist()
 respuestas = df[df["role"].str.lower() == "assistant"]["content"].tolist()
