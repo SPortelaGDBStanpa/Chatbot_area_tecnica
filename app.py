@@ -143,7 +143,7 @@ Sin embargo, es recomendable que la información sea clara y accesible para el c
 REDIRECCIONES_PREDEFINIDAS = {
     "internacional": {
         "palabras": [
-            "exportar", "exportación", "terceros países", "fuera de la ue",
+            "exportar", "exportación", "terceros países", "fuera de la ue", "Suiza",
             "australia", "nueva zelanda", "ee.uu", "eeuu", "china", "reino unido"
         ],
         "respuesta": """\
