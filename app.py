@@ -4,18 +4,20 @@
 # ==============================================
 
 import os
-from openai import OpenAI
 import pandas as pd
 import numpy as np
 import nltk
-from sklearn.metrics.pairwise import cosine_similarity
-from nltk.corpus import stopwords
+import string
 import streamlit as st
 import unicodedata
 import markdown
 import re
+import fitz  # PyMuPDF
+from openai import OpenAI
+from sklearn.metrics.pairwise import cosine_similarity
+from nltk.corpus import stopwords
 from datetime import datetime
-import string
+
 
 def render_html_markdown(texto):
     """Convierte markdown a HTML dentro del contenedor estilizado."""
@@ -41,6 +43,30 @@ ruta_excel = "conversaciones_revisando.xlsx"
 df = pd.read_excel(ruta_excel)
 df.columns = df.columns.str.strip().str.lower()
 
+# CARGAR Y PROCESAR PDFs
+
+carpeta_pdfs = "C:/Users/susana.portela/OneDrive - Asociación Nacional de Perfumería y Cosmética/Documentos/Chatbot_area_tecnica/Chatbot_area_tecnica"  # 📁 cambia esta ruta si tus PDFs están en otra carpeta
+textos_pdf = []
+nombres_pdf = []
+
+for archivo in os.listdir(carpeta_pdfs):
+    if archivo.lower().endswith(".pdf"):
+        ruta_pdf = os.path.join(carpeta_pdfs, archivo)
+        try:
+            with fitz.open(ruta_pdf) as pdf:
+                texto = ""
+                for pagina in pdf:
+                    texto += pagina.get_text()
+            textos_pdf.append(texto)
+            nombres_pdf.append(archivo)
+        except Exception as e:
+            print(f"⚠️ Error leyendo {archivo}: {e}")
+
+if textos_pdf:
+    print(f"✅ Se cargaron {len(textos_pdf)} PDFs correctamente.")
+else:
+    print("⚠️ No se encontraron PDFs en la carpeta especificada.")
+
 consultas = df[df["role"].str.lower() == "user"]["content"].tolist()
 respuestas = df[df["role"].str.lower() == "assistant"]["content"].tolist()
 
@@ -57,6 +83,17 @@ try:
 except FileNotFoundError:
     st.error("❌ No se encontró el archivo 'emb_consultas_comprimido.npz'.")
     st.stop()
+
+# BIS. EMBEDDINGS DE PDFs
+
+try:
+    datos_pdf = np.load("emb_pdfs_comprimido.npz", allow_pickle=True)
+    emb_pdfs = datos_pdf["emb"]
+    nombres_pdf = datos_pdf["nombres"]
+    print(f"✅ Embeddings de {len(nombres_pdf)} PDFs cargados correctamente.")
+except FileNotFoundError:
+    st.warning("⚠️ No se encontró el archivo 'emb_pdfs_comprimido.npz'. Ejecuta primero 'generar_emb_pdfs.py'.")
+    textos_pdf, nombres_pdf, emb_pdfs = [], [], []
 
 # ==============================================
 # 4️⃣ Buscar contexto relevante con embeddings
@@ -89,7 +126,25 @@ def buscar_contexto(pregunta, top_k=5, umbral_similitud=0.78):
         return [pares[indices_ordenados[0]][1]]
 
     print("⚠️ No se encontró coincidencia fuerte — se generará respuesta nueva.")
-    return [pares[i][1] for i in indices_ordenados]
+    # Si no hay coincidencia fuerte, probar también con PDFs
+    contextos = [pares[i][1] for i in indices_ordenados]
+
+    # 🔹 Buscar también en los PDFs cargados
+    if textos_pdf:
+        emb_pregunta = client.embeddings.create(
+            model="text-embedding-3-small",
+            input=pregunta_normalizada
+        ).data[0].embedding
+
+        similitudes_pdf = cosine_similarity([emb_pregunta], emb_pdfs)[0]
+        idx_pdf = similitudes_pdf.argmax()
+        if similitudes_pdf[idx_pdf] > 0.75:
+            fragmento_pdf = textos_pdf[idx_pdf][:2000]  # Solo un fragmento breve
+            print(f"📄 Coincidencia PDF encontrada en {nombres_pdf[idx_pdf]} ({similitudes_pdf[idx_pdf]:.2f})")
+            contextos.append(fragmento_pdf)
+
+    return contextos
+
 
 # ==============================================
 # FRASES POR TEMA
@@ -274,7 +329,16 @@ Si no hay nada relevante que añadir, responde con una frase breve confirmando q
     # 🔹 6️⃣ Caso general: búsqueda por embeddings
     # ======================================================
     fragmentos = buscar_contexto(pregunta)
+
+    # 👇 Bloque para visualizar el contexto usado
+    if mostrar_contexto:
+        st.markdown("### 📚 Fragmentos utilizados:")
+        for frag in fragmentos:
+            st.markdown(f"<pre>{frag[:1000]}</pre>", unsafe_allow_html=True)
+
+    # Construir el contexto textual
     contexto = "\n\n".join(fragmentos) if fragmentos else ""
+
     prompt = f"""
 Eres un asistente técnico experto en legislación cosmética, biocidas y productos regulados.
 Redacta una respuesta formal, precisa y técnica, pero **no incluyas fórmulas de cortesía como 'Estimado/a' ni nombres del remitente.**
@@ -284,7 +348,6 @@ Empieza la respuesta directamente tras el saludo y no incluyas saludos ni cierre
 Contexto normativo: {contexto}
 Pregunta: {pregunta}
 """
-
     respuesta = client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[{"role": "user", "content": prompt}],
@@ -344,7 +407,7 @@ pregunta = st.chat_input("Escribe tu consulta y pulsa Enter para enviar...")
 if pregunta:
     st.session_state.historial.append({"role": "user", "content": pregunta})
     with st.spinner("Analizando consulta..."):
-        respuesta = responder_chatbot(pregunta)
+        respuesta = responder_chatbot(pregunta, mostrar_contexto=True)
     st.session_state.historial.append({"role": "assistant", "content": respuesta})
     st.rerun()
 
